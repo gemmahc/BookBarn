@@ -68,7 +68,6 @@ namespace RolyPoly
                     if (visit.LastResult != Result.Pending)
                     {
                         // ToDo: Log duplicate and continue
-                        Console.WriteLine($"Skipped {request.Endpoint} in cycle {Info.Cycle}");
                         Info.DuplicatesSkippedLastCycle.Add(request.Endpoint);
                         continue;
                     }
@@ -93,7 +92,7 @@ namespace RolyPoly
                         Info.ScheduledLastCycle.Add(request.Endpoint);
                         Info.CurrentlyRunning.Add(request.Endpoint);
                     }
-                    catch (UnknownCrawlerTypeException ex)
+                    catch (UnknownCrawlerTypeException)
                     {
                         // log and skip the request.
                     }
