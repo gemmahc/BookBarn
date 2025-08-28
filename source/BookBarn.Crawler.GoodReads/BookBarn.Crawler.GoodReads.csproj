@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BookBarn.Model\BookBarn.Model.csproj" />
-    <ProjectReference Include="..\RolyPoly\BookBarn.Crawler.csproj" />
+    <ProjectReference Include="..\BookBarn.Crawler\BookBarn.Crawler.csproj" />
   </ItemGroup>
 
 </Project>
