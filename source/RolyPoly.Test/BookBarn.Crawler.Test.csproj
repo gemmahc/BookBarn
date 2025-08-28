@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RolyPoly\RolyPoly.csproj" />
+    <ProjectReference Include="..\RolyPoly\BookBarn.Crawler.csproj" />
   </ItemGroup>
 
   <ItemGroup>

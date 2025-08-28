@@ -1,4 +1,4 @@
-﻿namespace RolyPoly.Utilities
+﻿namespace BookBarn.Crawler.Utilities
 {
     /// <summary>
     /// The options for configuing a request throttle.

@@ -1,4 +1,4 @@
-﻿namespace RolyPoly.Test
+﻿namespace BookBarn.Crawler.Test
 {
     internal class TestCrawlerQueue : ICrawlerQueue
     {

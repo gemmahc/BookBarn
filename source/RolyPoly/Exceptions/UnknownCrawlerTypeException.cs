@@ -1,4 +1,4 @@
-﻿namespace RolyPoly
+﻿namespace BookBarn.Crawler
 {
     public class UnknownCrawlerTypeException : Exception
     {

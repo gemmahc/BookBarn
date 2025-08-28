@@ -1,11 +1,11 @@
 ﻿using System.Collections.Concurrent;
 
-namespace RolyPoly.Utilities
+namespace BookBarn.Crawler.Utilities
 {
     /// <summary>
     /// Class to maintain separate throttles partitioned by key
     /// </summary>
-    public class PartitionedRequestThrottle : IDisposable
+    public class PartitionedRequestThrottle : IDisposable, IRequestThrottle
     {
         private ConcurrentDictionary<string, RequestThrottle> _throttles;
         private bool _disposedValue;
@@ -37,11 +37,13 @@ namespace RolyPoly.Utilities
         /// Executes a unit of work within the specified partition.
         /// </summary>
         /// <typeparam name="T">The return type of the request.</typeparam>
-        /// <param name="partitionKey">The key to the partition to throttle.</param>
+        /// <param name="endpoint">The endpoint to target.</param>
         /// <param name="unitOfWork">The delegate that runs the request.</param>
         /// <returns>The result of the request.</returns>
-        public async Task<T> RunAsync<T>(string partitionKey, Func<Task<T>> unitOfWork)
+        public async Task<T> RunAsync<T>(Uri endpoint, Func<Uri, Task<T>> unitOfWork)
         {
+            string partitionKey = endpoint.Host;
+
             if (!_throttles.ContainsKey(partitionKey))
             {
                 Console.WriteLine($"Adding throttle for key [{partitionKey}]");
@@ -51,7 +53,7 @@ namespace RolyPoly.Utilities
                     (key, existing) => { return existing; });
             }
 
-            return await _throttles[partitionKey].RunAsync(unitOfWork);
+            return await _throttles[partitionKey].RunAsync(endpoint, unitOfWork);
         }
 
         /// <summary>

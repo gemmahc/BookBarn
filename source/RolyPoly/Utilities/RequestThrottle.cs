@@ -1,11 +1,11 @@
 ﻿using System.Threading.RateLimiting;
 
-namespace RolyPoly.Utilities
+namespace BookBarn.Crawler.Utilities
 {
     /// <summary>
     /// Represents a throttling of requests using a Token Bucket rate limiter.
     /// </summary>
-    public class RequestThrottle : IDisposable
+    public class RequestThrottle : IDisposable, IRequestThrottle
     {
         private RateLimiter _limiter;
         private bool disposedValue;
@@ -35,10 +35,11 @@ namespace RolyPoly.Utilities
         /// <summary>
         /// Executes the specified unit of work when the throttle allows.
         /// </summary>
-        /// <param name="unitOfWork">The unit of work to execute</param>
+        /// <param name="endpoint">The target of the request.</param>
+        /// <param name="unitOfWork">The unit of work to execute.</param>
         /// <returns>The result of the unit of work</returns>
         /// <exception cref="RequestThrottleException">Throws when the total queued requests exceeds the maximum allowed for this throttle instance.</exception>
-        public async Task<T> RunAsync<T>(Func<Task<T>> unitOfWork)
+        public async Task<T> RunAsync<T>(Uri endpoint, Func<Uri, Task<T>> unitOfWork)
         {
             using (var lease = await _limiter.AcquireAsync())
             {
@@ -47,7 +48,7 @@ namespace RolyPoly.Utilities
                     throw new RequestThrottleException($"Throttle request queue exceeded limit of [{_options.MaxQueuedRequests}] requests");
                 }
 
-                return await Task.Run(() => unitOfWork());
+                return await Task.Run(() => unitOfWork(endpoint));
             }
         }
 

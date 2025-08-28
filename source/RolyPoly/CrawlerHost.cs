@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace RolyPoly
+namespace BookBarn.Crawler
 {
     /// <summary>
     /// Hosts Crawler scheduling and execution.

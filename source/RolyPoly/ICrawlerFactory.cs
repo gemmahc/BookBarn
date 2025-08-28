@@ -1,4 +1,4 @@
-﻿namespace RolyPoly
+﻿namespace BookBarn.Crawler
 {
     /// <summary>
     /// Provides an interface into creation of crawlers of known types.

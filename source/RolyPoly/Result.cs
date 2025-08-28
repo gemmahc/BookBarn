@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RolyPoly
+namespace BookBarn.Crawler
 {
     /// <summary>
     /// The available outcomes to an action.

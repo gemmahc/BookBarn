@@ -1,4 +1,4 @@
-﻿namespace RolyPoly
+﻿namespace BookBarn.Crawler
 {
     /// <summary>
     /// Represents the result of a crawler execution.

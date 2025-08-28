@@ -1,4 +1,4 @@
-﻿namespace RolyPoly
+﻿namespace BookBarn.Crawler
 {
     /// <summary>
     /// Represents a visit to a specified resource.

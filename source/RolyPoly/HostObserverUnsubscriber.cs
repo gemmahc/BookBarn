@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace RolyPoly
+namespace BookBarn.Crawler
 {
     /// <summary>
     /// Exposes unsubscription logic for subscribers of CrawlerHost cycle events.
