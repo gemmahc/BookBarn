@@ -21,8 +21,8 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
-      run: dotnet restore \source\BookBarn.sln
+      run: dotnet restore source/BookBarn.sln
     - name: Build
-      run: dotnet build --no-restore \source\BookBarn.sln
+      run: dotnet build --no-restore source/BookBarn.sln
     - name: Test
-      run: dotnet test --no-build --verbosity normal \source\BookBarn.sln
+      run: dotnet test --no-build --verbosity normal source/BookBarn.sln
