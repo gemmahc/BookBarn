@@ -7,14 +7,16 @@ namespace BookBarn.Crawler.GoodReads
 {
     public class SeriesPage : Page<BookSeries>
     {
-
         public SeriesPage(Uri endpoint, IRequestThrottle throttle) : base(endpoint, throttle)
+        { }
+
+        public SeriesPage(Uri endpoint, HtmlDocument document) : base(endpoint, document)
         { }
 
         protected override Task<BookSeries> ExtractCore(HtmlDocument doc)
         {
             BookSeries series = new BookSeries();
-            series.Url = Endpoint.ToString();
+            series.Url = Endpoint;
 
             string xpath = "//div[@class='responsiveBook']/div/div[@class='u-paddingBottomXSmall']/a";
             var bookElts = doc.DocumentNode.SelectNodes(xpath);

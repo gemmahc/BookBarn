@@ -5,11 +5,34 @@ using Newtonsoft.Json;
 
 namespace BookBarn.Crawler.GoodReads
 {
+    /// <summary>
+    /// Encapsulates extraction for a GoodReads book page https://www.goodreads.com/book
+    /// </summary>
     public class BookPage : Page<Book>
     {
+        /// <summary>
+        /// Creates a new BookPage for the specified endpoint.
+        /// </summary>
+        /// <param name="endpoint">The endpoint.</param>
+        /// <param name="throttle">The request throttle used when accessing the endpoint.</param>
         public BookPage(Uri endpoint, IRequestThrottle throttle) : base(endpoint, throttle)
         { }
 
+        /// <summary>
+        /// Creates a new BookPage for the specified endpoint, prepopulated with the provided html doc.
+        /// </summary>
+        /// <param name="endpoint">The endpoint.</param>
+        /// <param name="document">The page html.</param>
+        public BookPage(Uri endpoint, HtmlDocument document) : base(endpoint, document)
+        {
+        }
+
+        /// <summary>
+        /// Extraction logic for HTML into Book
+        /// </summary>
+        /// <param name="doc">The HTML document to process.</param>
+        /// <returns>The book instance.</returns>
+        /// <exception cref="PageParseException">Thrown when unable to identify/parse page contents.</exception>
         protected override Task<Book> ExtractCore(HtmlDocument doc)
         {
             Book book = new Book();
@@ -24,7 +47,6 @@ namespace BookBarn.Crawler.GoodReads
                 throw new PageParseException(Endpoint, $"Unable to locate book page json at xpath [{xpath}]");
             }
 
-            Console.WriteLine(pageData);
             dynamic? _bookPageJson = JsonConvert.DeserializeObject(pageData);
 
             if (_bookPageJson == null)
@@ -32,27 +54,30 @@ namespace BookBarn.Crawler.GoodReads
                 throw new PageParseException(Endpoint, $"Book page content at [{xpath}] is not valid JSON");
             }
 
-            var cont = _bookPageJson["props"]["pageProps"]["apolloState"];
+            dynamic? cont = _bookPageJson["props"]["pageProps"]["apolloState"];
+
+            if (cont == null)
+            {
+                throw new PageParseException(Endpoint, $"Book page content at [{xpath}] has unexpected JSON");
+            }
 
             foreach (var item in cont)
             {
                 string? key = item.Name as string;
-                Console.WriteLine(key);
+
                 if (string.IsNullOrEmpty(key)) continue;
                 else if (key.StartsWith("Book:"))
                 {
                     book.Title = item.Value["title"];
                     book.Description = item.Value["description"];
                     book.CoverImage = item.Value["imageUrl"];
-                    book.SeriesRank = item.Value["bookSeries"][0]["userPosition"];
                     book.Format = item.Value["details"]["format"];
                     book.Pages = item.Value["details"]["numPages"];
 
-                    long pubTime = item.Value["details"]["publicationTime"];
-                    DateTime pubDate = DateTime.UnixEpoch.AddMilliseconds(pubTime);
-
-                    book.PublishDate = pubDate;
-                    book.PublishYear = pubDate.Year;
+                    if (item.Value["bookSeries"].Count > 0)
+                    {
+                        book.SeriesRank = item.Value["bookSeries"][0]["userPosition"];
+                    }
 
                     // Populate genres
                     List<string> genres = new List<string>();
@@ -84,6 +109,12 @@ namespace BookBarn.Crawler.GoodReads
                 {
                     book.Rating = item.Value["stats"]["averageRating"];
                     book.RatingCount = item.Value["stats"]["ratingsCount"];
+
+                    long pubTime = item.Value["details"]["publicationTime"];
+                    DateTime pubDate = DateTime.UnixEpoch.AddMilliseconds(pubTime);
+
+                    book.PublishDate = pubDate;
+                    book.PublishYear = pubDate.Year;
                 }
                 else if (key.StartsWith("Contributor:"))
                 {
@@ -93,6 +124,12 @@ namespace BookBarn.Crawler.GoodReads
                         book.Author = authorFallback;
                     }
                 }
+            }
+
+            // Sanity check on parsed book. Title and Author are minimum required for a uniquely identified book.
+            if (string.IsNullOrEmpty(book.Title) || string.IsNullOrEmpty(book.Author))
+            {
+                throw new PageParseException(Endpoint, $"Title or Author not found on page [{Endpoint}]. Invalid book.");
             }
 
             return Task.FromResult(book);

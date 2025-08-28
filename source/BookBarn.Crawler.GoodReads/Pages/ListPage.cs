@@ -10,6 +10,9 @@ namespace BookBarn.Crawler.GoodReads
         public ListPage(Uri endpoint, IRequestThrottle throttle) : base(endpoint, throttle)
         { }
 
+        public ListPage(Uri endpoint, HtmlDocument document) : base(endpoint, document)
+        { }
+
         protected override Task<BookList> ExtractCore(HtmlDocument doc)
         {
             BookList list = new BookList();

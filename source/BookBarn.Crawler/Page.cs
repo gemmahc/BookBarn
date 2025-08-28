@@ -32,10 +32,23 @@ namespace BookBarn.Crawler
             {
                 throw new PageParseException(Endpoint, $"Failed to load the page at [{Endpoint}]");
             }
+            
+            try
+            {
+                return await ExtractCore(_document);
+            }
+            catch (PageParseException)
+            {
+                // if concrete page threw the exception, rethrow it.
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // unhandled in concrete page, throw a parse exception with caught exception.
+                throw new PageParseException(Endpoint, $"Failed to extract page content for [{Endpoint}]", ex);
+            }
 
-            return await ExtractCore(_document);
         }
-
 
         protected abstract Task<T> ExtractCore(HtmlDocument doc);
 

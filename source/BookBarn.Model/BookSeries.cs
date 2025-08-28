@@ -16,7 +16,7 @@
         /// <summary>
         /// The location of the series page.
         /// </summary>
-        public string? Url { get; set; }
+        public Uri? Url { get; set; }
 
         /// <summary>
         /// The list of links to the books in this series.
