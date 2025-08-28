@@ -10,7 +10,7 @@
             ArgumentNullException.ThrowIfNull(endpoint);
             ArgumentNullException.ThrowIfNull(crawlerType);
 
-            if (typeof(Crawler).IsAssignableFrom(crawlerType))
+            if (!typeof(Crawler).IsAssignableFrom(crawlerType))
             {
                 throw new ArgumentException($"{nameof(crawlerType)} must inherit {typeof(Crawler).FullName}");
             }

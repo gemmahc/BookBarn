@@ -6,39 +6,54 @@ namespace RolyPoly
     /// <summary>
     /// Hosts Crawler scheduling and execution.
     /// </summary>
-    public class CrawlerHost
+    public class CrawlerHost : IObservable<HostInfo>
     {
         private ICrawlerFactory _crawlerFactory;
         private ICrawlerQueue _queue;
-        private const int MAX_CONCURRENT_CRAWLERS = 10;
-        private const int IDLE_POLLING_INTERVAL_SECONDS = 10;
-        private const int FAILED_CRAWLER_RETRY_COUNT = 3;
+        private CrawlerHostConfiguration _config;
+        private ConcurrentDictionary<int, IObserver<HostInfo>> _observers;
+        private List<Task<CrawlerResult>> _tasks;
 
         /// <summary>
         /// Track the endpoints visited to avoid cycles and duplicate work.
         /// </summary>
         private ConcurrentDictionary<Uri, Visit> _visits;
 
-        public CrawlerHost(ICrawlerFactory crawlerFactory, ICrawlerQueue queue)
+        /// <summary>
+        /// Creates a new instance of the crawler host.
+        /// </summary>
+        /// <param name="config">The host configuration.</param>
+        /// <param name="crawlerFactory">The factory used to generate instances of the requested crawlers.</param>
+        /// <param name="queue">The queue the host uses for processing requests.</param>
+        public CrawlerHost(CrawlerHostConfiguration config, ICrawlerFactory crawlerFactory, ICrawlerQueue queue)
         {
+            _config = config;
             _crawlerFactory = crawlerFactory;
             _queue = queue;
             _visits = new ConcurrentDictionary<Uri, Visit>();
+            _tasks = new List<Task<CrawlerResult>>();
+            _observers = new ConcurrentDictionary<int, IObserver<HostInfo>>();
+            Info = new HostInfo();
         }
+
+        /// <summary>
+        /// Gets the current host information. 
+        /// </summary>
+        public HostInfo Info { get; }
 
         /// <summary>
         /// Executes the crawler host.
         /// </summary>
         /// <param name="token">The cancellation token to stop the host.</param>
         /// <returns>Waitable task.</returns>
-        public async Task Run(CancellationToken token)
+        public async Task RunAsync(CancellationToken token)
         {
-            List<Task<CrawlerResult>> tasks = new List<Task<CrawlerResult>>();
-
             while (!token.IsCancellationRequested)
             {
+                Info.StartCycle();
+
                 // Queue new crawlers in the request queue
-                while (tasks.Count < MAX_CONCURRENT_CRAWLERS || !await _queue.HasWork())
+                while (_tasks.Count < _config.MaxConcurrentCrawlers && await _queue.HasWork())
                 {
                     var request = await _queue.GetNext();
 
@@ -53,6 +68,8 @@ namespace RolyPoly
                     if (visit.LastResult != Result.Pending)
                     {
                         // ToDo: Log duplicate and continue
+                        Console.WriteLine($"Skipped {request.Endpoint} in cycle {Info.Cycle}");
+                        Info.DuplicatesSkippedLastCycle.Add(request.Endpoint);
                         continue;
                     }
 
@@ -71,7 +88,10 @@ namespace RolyPoly
                                         return old;
                                     });
                         var task = Task<CrawlerResult>.Run(async () => await crawler.RunAsync());
-                        tasks.Add(task);
+                        _tasks.Add(task);
+
+                        Info.ScheduledLastCycle.Add(request.Endpoint);
+                        Info.CurrentlyRunning.Add(request.Endpoint);
                     }
                     catch (UnknownCrawlerTypeException ex)
                     {
@@ -80,18 +100,27 @@ namespace RolyPoly
                 }
 
                 // Check for completed crawlers and clear from task list.
-                Task<CrawlerResult> resultTask = await Task<CrawlerResult>.WhenAny(tasks);
-                await resultTask;
-                tasks.Remove(resultTask);
-                HandleResult(resultTask.Result);
-
-                if (tasks.Count == 0 && !await _queue.HasWork())
+                if (_tasks.Any())
                 {
-                    // No tasks pending in the queue and no tasks running. Sleep for a bit and check again.
-                    await Task.Delay(TimeSpan.FromSeconds(IDLE_POLLING_INTERVAL_SECONDS));
+                    Task<CrawlerResult> resultTask = await Task<CrawlerResult>.WhenAny(_tasks);
+                    await resultTask;
+                    _tasks.Remove(resultTask);
+                    HandleResult(resultTask.Result);
                 }
+
+                if (_tasks.Count == 0 && !await _queue.HasWork())
+                {
+                    Info.HostIdle = true;
+                    // No tasks pending in the queue and no tasks running. Sleep for a bit and check again.
+                    await Task.Delay(TimeSpan.FromMilliseconds(_config.IdlePollingIntervalMilliseconds));
+                }
+
+                NotifyObservers();
             }
+
+            ClearObservers();
         }
+
 
         /// <summary>
         /// Gets an instance of the requested crawler.
@@ -126,8 +155,12 @@ namespace RolyPoly
         /// <param name="result">The crawler result.</param>
         private void HandleResult(CrawlerResult result)
         {
+            Info.CurrentlyRunning.Remove(result.Endpoint);
+            Info.CompletedLastCycle++;
+
             if (result.Result == Result.Success)
             {
+                Info.SucceededLastCycle.Add(result.Endpoint);
                 _visits.AddOrUpdate(
                     result.Endpoint,
                     new Visit() { LastResult = Result.Success, Visits = 1 },
@@ -141,12 +174,13 @@ namespace RolyPoly
                 foreach (var kvp in result.ToDispatch)
                 {
                     CrawlRequest request = new CrawlRequest(kvp.Key, kvp.Value);
-
+                    Info.ChildrenProcessedLastCycle.Add(request.Endpoint);
                     QueueRequest(request);
                 }
             }
             else if (result.Result == Result.Failure)
             {
+                Info.FailedLastCycle.Add(result.Endpoint);
                 Visit visit = _visits.AddOrUpdate(
                                             result.Endpoint,
                                             new Visit() { LastResult = Result.Failure, Visits = 1 },
@@ -156,11 +190,10 @@ namespace RolyPoly
                                                 return old;
                                             });
 
-                if (visit.Visits < FAILED_CRAWLER_RETRY_COUNT)
+                if (visit.Visits <= _config.FailedCrawlerRetryCount)
                 {
                     // Re-queue this crawler if retries haven't been exhausted.
                     CrawlRequest request = new CrawlRequest(result.Endpoint, result.CrawlerType);
-
                     QueueRequest(request);
                 }
             }
@@ -179,9 +212,10 @@ namespace RolyPoly
             if (_visits.ContainsKey(request.Endpoint))
             {
                 Visit visit = _visits[request.Endpoint];
-                if (visit.LastResult == Result.Failure && visit.Visits < FAILED_CRAWLER_RETRY_COUNT)
+                if (visit.LastResult == Result.Failure && visit.Visits <= _config.FailedCrawlerRetryCount)
                 {
-                    // If we've seen the request on this enpoint previously, the only only condition 
+                    Info.RetriesQueuedLastCycle.Add(request.Endpoint);
+                    // If we've seen the request on this endpoint previously, the only only condition 
                     // we will re-queue it is if it hasn't exhausted retries on failure
 
                     // ToDo: Log previous failed result and retry message.
@@ -189,6 +223,7 @@ namespace RolyPoly
                 else
                 {
                     // Already visited this endpoint (either successfully or exhausted retries), don't queue it again.
+                    Info.DuplicatesSkippedLastCycle.Add(request.Endpoint);
                     return;
                 }
             }
@@ -205,5 +240,61 @@ namespace RolyPoly
 
             _queue.Enqueue(request);
         }
+        #region IObservable
+
+        /// <summary>
+        /// Subscribes to host events
+        /// </summary>
+        /// <param name="observer">The observer to deliver host information to.</param>
+        /// <returns>The host information representing a snapshot of current execution.</returns>
+        public IDisposable Subscribe(IObserver<HostInfo> observer)
+        {
+            int lastKey = 0;
+
+            foreach (var kvp in _observers)
+            {
+                if (kvp.Value == observer)
+                {
+                    return new HostObserverUnsubscriber(_observers, kvp.Key);
+                }
+
+                lastKey = Math.Max(lastKey, kvp.Key);
+            }
+
+            lastKey++;
+
+            while (!_observers.TryAdd(lastKey, observer))
+            {
+                lastKey++;
+            }
+
+            return new HostObserverUnsubscriber(_observers, lastKey);
+        }
+
+        /// <summary>
+        /// Notify subscribed observers of the current host info.
+        /// </summary>
+        private void NotifyObservers()
+        {
+            foreach (var kvp in _observers)
+            {
+                kvp.Value.OnNext(Info.Clone());
+            }
+        }
+
+        /// <summary>
+        /// Clear subscriptions to the current host information.
+        /// </summary>
+        private void ClearObservers()
+        {
+            foreach (var kvp in _observers)
+            {
+                kvp.Value.OnCompleted();
+            }
+            _observers.Clear();
+        }
+
+        #endregion
+
     }
 }
