@@ -9,6 +9,7 @@ namespace BookBarn.Api.Client
     {
         private Uri _endpoint;
         private static HttpClient _client = new HttpClient();
+        private HttpClient? _injectedClient;
 
         protected ApiClient(Uri endpoint)
         {
@@ -17,14 +18,14 @@ namespace BookBarn.Api.Client
 
         protected ApiClient(HttpClient client, Uri endpoint) : this(endpoint)
         {
-            _client = client;
+            _injectedClient = client;
         }
 
         protected async Task<T> GetAsync<T>(string? path = null, string? query = null)
         {
             Uri target = BuildTarget(path: path, query: query);
 
-            var res = await _client.GetAsync(target);
+            var res = await Client.GetAsync(target);
 
             return await ProcessResult<T>(res);
         }
@@ -33,7 +34,7 @@ namespace BookBarn.Api.Client
         {
             Uri target = BuildTarget(path: path);
 
-            var res = await _client.PutAsJsonAsync<T>(target, obj);
+            var res = await Client.PutAsJsonAsync<T>(target, obj);
 
             return await ProcessResult<T>(res);
         }
@@ -42,7 +43,7 @@ namespace BookBarn.Api.Client
         {
             Uri target = BuildTarget(path: action);
 
-            var res = await _client.PostAsJsonAsync<T1>(target, obj);
+            var res = await Client.PostAsJsonAsync<T1>(target, obj);
 
             return await ProcessResult<T2>(res);
         }
@@ -51,7 +52,7 @@ namespace BookBarn.Api.Client
         {
             Uri target = BuildTarget(path: id);
 
-            var res = await _client.DeleteAsync(target);
+            var res = await Client.DeleteAsync(target);
 
             res.EnsureSuccessStatusCode();
         }
@@ -88,6 +89,19 @@ namespace BookBarn.Api.Client
             }
 
             return content;
+        }
+
+        private HttpClient Client
+        {
+            get
+            {
+                if (_injectedClient != null)
+                {
+                    return _injectedClient;
+                }
+
+                return _client;
+            }
         }
     }
 }
