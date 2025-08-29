@@ -7,7 +7,7 @@
         #region Books
         public static string StandaloneBook = File.ReadAllText(Path.Combine(TestDataRoot, "StandaloneBook.txt"));
 
-        public static Uri StandaloneBookUri = new Uri("https://www.goodreads.com/book/show/10210.Jane_Eyre");
+        public static Uri StandaloneBookUri = new Uri("https://www.goodreads.com/book/show/35031085-frankenstein");
 
         public static string BookInSeries = File.ReadAllText(Path.Combine(TestDataRoot, "BookInSeries.txt"));
 

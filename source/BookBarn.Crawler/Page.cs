@@ -32,7 +32,7 @@ namespace BookBarn.Crawler
             {
                 throw new PageParseException(Endpoint, $"Failed to load the page at [{Endpoint}]");
             }
-            
+
             try
             {
                 return await ExtractCore(_document);

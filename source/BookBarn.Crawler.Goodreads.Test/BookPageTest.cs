@@ -51,17 +51,17 @@ namespace BookBarn.Crawler.GoodReads.Test
             Assert.NotNull(res);
 
             // Assert parsed fields are populated.
-            Assert.Equal("Jane Eyre", res.Title);
-            Assert.Equal("Charlotte Brontë", res.Author);
-            Assert.Equal(532, res.Pages);
+            Assert.Equal("Frankenstein: The 1818 Text", res.Title);
+            Assert.Equal("Mary Wollstonecraft Shelley", res.Author);
+            Assert.Equal(260, res.Pages);
             Assert.Equal("Paperback", res.Format);
             Assert.Equal(TestDataHelper.StandaloneBookUri.ToString(), res.Url);
-            Assert.Equal("https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1557343311i/10210.jpg", res.CoverImage);
-            Assert.Equal(1846, res.PublishYear);
-            Assert.Equal(DateTime.UnixEpoch.AddMilliseconds(-3888144422000), res.PublishDate);
+            Assert.Equal("https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1631088473i/35031085.jpg", res.CoverImage);
+            Assert.Equal(1818, res.PublishYear);
+            Assert.Equal(DateTime.UnixEpoch.AddMilliseconds(-4796640422000), res.PublishDate);
             Assert.Equal(10, res.Genres?.Length);
-            Assert.Equal(2271425, res.RatingCount);
-            Assert.Equal(4.16, res.Rating);
+            Assert.Equal(1783977, res.RatingCount);
+            Assert.Equal(3.89, res.Rating);
             Assert.False(string.IsNullOrEmpty(res.Description));
 
             //Ensure series fields are still null.
