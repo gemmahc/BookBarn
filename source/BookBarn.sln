@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookBarn.Crawler.GoodReads"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookBarn.Crawler.GoodReads.Test", "BookBarn.Crawler.Goodreads.Test\BookBarn.Crawler.GoodReads.Test.csproj", "{0716E920-8F85-D8E0-AC2D-BE09ECFEE85E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookBarn.Api.Client", "BookBarn.Api.Client\BookBarn.Api.Client.csproj", "{1925AE2F-5DD5-42C8-A405-3D33BB1AFFBB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookBarn.Api.Client.Test", "BookBarn.Api.Client.Test\BookBarn.Api.Client.Test.csproj", "{CDAE355A-C859-4A3F-99AA-4F8F97AD1809}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{0716E920-8F85-D8E0-AC2D-BE09ECFEE85E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0716E920-8F85-D8E0-AC2D-BE09ECFEE85E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0716E920-8F85-D8E0-AC2D-BE09ECFEE85E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1925AE2F-5DD5-42C8-A405-3D33BB1AFFBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1925AE2F-5DD5-42C8-A405-3D33BB1AFFBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1925AE2F-5DD5-42C8-A405-3D33BB1AFFBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1925AE2F-5DD5-42C8-A405-3D33BB1AFFBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CDAE355A-C859-4A3F-99AA-4F8F97AD1809}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDAE355A-C859-4A3F-99AA-4F8F97AD1809}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDAE355A-C859-4A3F-99AA-4F8F97AD1809}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDAE355A-C859-4A3F-99AA-4F8F97AD1809}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
