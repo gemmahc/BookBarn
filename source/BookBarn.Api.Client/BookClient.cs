@@ -1,13 +1,13 @@
-﻿using BookBarn.Model;
-using BookBarn.Model.API.v1;
+﻿using BookBarn.Api.v1;
+using BookBarn.Model;
 
 namespace BookBarn.Api.Client
 {
-    public class BookClient : ApiClient, IBooksController
+    public class BookClient : ApiClient, IBooksService
     {
-        public BookClient(Uri endpoint) : base(new Uri(endpoint, "/v1/Books")) { }
+        public BookClient(Uri endpoint) : base(endpoint) { }
 
-        public BookClient(HttpClient client, Uri endpoint) : base(client, new Uri(endpoint, "/v1/Books")) { }
+        public BookClient(HttpClient client) : base(client) { }
 
         public async Task Delete(string id)
         {
@@ -46,6 +46,11 @@ namespace BookBarn.Api.Client
         public async Task<IEnumerable<Book>> Query(BookQuery query)
         {
             return await base.PostAsync<BookQuery, IEnumerable<Book>>(query, "Query");
+        }
+
+        protected override string GetRoute()
+        {
+            return "/api/v1/Books";
         }
     }
 }

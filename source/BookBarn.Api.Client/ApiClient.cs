@@ -13,13 +13,23 @@ namespace BookBarn.Api.Client
 
         protected ApiClient(Uri endpoint)
         {
-            _endpoint = endpoint;
+            _endpoint = new Uri(endpoint, GetRoute());
         }
 
-        protected ApiClient(HttpClient client, Uri endpoint) : this(endpoint)
+        protected ApiClient(HttpClient client)
         {
             _injectedClient = client;
+
+            if (client.BaseAddress == null)
+            {
+                throw new ArgumentException("Client's base address must be populated with the base address of the API endpoint.");
+            }
+
+            _endpoint = new Uri(GetRoute(), UriKind.Relative);
         }
+
+        protected abstract string GetRoute();
+
 
         protected async Task<T> GetAsync<T>(string? path = null, string? query = null)
         {
@@ -61,7 +71,19 @@ namespace BookBarn.Api.Client
         {
             string pathAndQuery = string.Empty;
 
-            UriBuilder builder = new UriBuilder(_endpoint);
+            Uri baseUri = _endpoint;
+
+            if (!baseUri.IsAbsoluteUri)
+            {
+                if (Client.BaseAddress == null)
+                {
+                    throw new InvalidOperationException("Unable to determine the absolute uri for the target endpoint.");
+                }
+
+                baseUri = new Uri(Client.BaseAddress, baseUri);
+            }
+
+            UriBuilder builder = new UriBuilder(baseUri);
 
             if (!string.IsNullOrEmpty(path))
             {

@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace BookBarn.Model.Extensions
+namespace BookBarn.Model
 {
     /// <summary>
     /// Extension methods for the <c>Book</c> class.

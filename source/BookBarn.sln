@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookBarn.Api.Client", "Book
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookBarn.Api.Client.Test", "BookBarn.Api.Client.Test\BookBarn.Api.Client.Test.csproj", "{CDAE355A-C859-4A3F-99AA-4F8F97AD1809}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookBarn.Api", "BookBarn.Api\BookBarn.Api.csproj", "{907A9742-2526-4268-A8C7-944098CF00B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{CDAE355A-C859-4A3F-99AA-4F8F97AD1809}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CDAE355A-C859-4A3F-99AA-4F8F97AD1809}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CDAE355A-C859-4A3F-99AA-4F8F97AD1809}.Release|Any CPU.Build.0 = Release|Any CPU
+		{907A9742-2526-4268-A8C7-944098CF00B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{907A9742-2526-4268-A8C7-944098CF00B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{907A9742-2526-4268-A8C7-944098CF00B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{907A9742-2526-4268-A8C7-944098CF00B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

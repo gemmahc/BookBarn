@@ -35,8 +35,10 @@ namespace BookBarn.Crawler.GoodReads.Test
 
             // Ensure non-parsed fields are still null.
             Assert.Null(res.CoverMedia);
-            Assert.Null(res.Id);
             Assert.Null(res.LastUpdated);
+
+            // Ensure Id is auto-populated
+            Assert.NotNull(res.Id);
         }
 
         [Fact]
@@ -71,8 +73,10 @@ namespace BookBarn.Crawler.GoodReads.Test
 
             // Ensure non-parsed fields are still null.
             Assert.Null(res.CoverMedia);
-            Assert.Null(res.Id);
             Assert.Null(res.LastUpdated);
+
+            // Ensure Id is auto-populated
+            Assert.NotNull(res.Id);
         }
 
         [Fact]

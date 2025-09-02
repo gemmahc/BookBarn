@@ -1,18 +1,20 @@
 ﻿using BookBarn.Crawler.Utilities;
-using BookBarn.Model.Providers;
+using BookBarn.Api.v1;
 
 namespace BookBarn.Crawler.GoodReads
 {
-    internal class GoodReadsCrawlerFactory : ICrawlerFactory
+    public class GoodReadsCrawlerFactory : ICrawlerFactory
     {
-        private IBookDataProvider _bookDataProvider;
-        private IMediaStorageProvider _mediaStorageProvider;
+        private IBooksService _booksController;
+        private IMediaService _mediaController;
+        private IHttpClientFactory _httpClientFactory;
         private PartitionedRequestThrottle _throttle;
 
-        public GoodReadsCrawlerFactory(IBookDataProvider bookProvider, IMediaStorageProvider mediaProvider)
+        public GoodReadsCrawlerFactory(IBooksService booksController, IMediaService mediaController, IHttpClientFactory httpClientFactory)
         {
-            _bookDataProvider = bookProvider;
-            _mediaStorageProvider = mediaProvider;
+            _booksController = booksController;
+            _mediaController = mediaController;
+            _httpClientFactory = httpClientFactory;
 
             RequestThrottleOptions throttleOpts = new RequestThrottleOptions()
             {
@@ -27,7 +29,7 @@ namespace BookBarn.Crawler.GoodReads
         {
             if (typeof(T) == typeof(BookCrawler))
             {
-                return new BookCrawler(endpoint, _mediaStorageProvider, _bookDataProvider, _throttle);
+                return new BookCrawler(endpoint, _mediaController, _booksController, _throttle, _httpClientFactory);
             }
             else if (typeof(T) == typeof(ListCrawler))
             {

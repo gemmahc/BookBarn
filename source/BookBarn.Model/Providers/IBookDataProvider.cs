@@ -8,8 +8,10 @@
         /// <summary>
         /// Gets all books in the data store.
         /// </summary>
+        /// <param name="count">The maximum number of records to retrieve.</param>
+        /// <param name="afterId">The id to start returning from (exclusive).</param>
         /// <returns>The list of book instances.</returns>
-        public Task<IEnumerable<Book>> GetAll();
+        public Task<IEnumerable<Book>> GetMany(int count, string? afterId);
 
         /// <summary>
         /// Gets a specific book by Id in the data store.

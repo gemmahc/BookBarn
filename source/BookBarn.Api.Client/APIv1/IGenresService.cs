@@ -1,9 +1,11 @@
-﻿namespace BookBarn.Model.API.v1
+﻿using BookBarn.Model;
+
+namespace BookBarn.Api.v1
 {
     /// <summary>
     /// Interface for interacting with Genres in the book barn.
     /// </summary>
-    public interface IGenresController
+    public interface IGenresService
     {
         /// <summary>
         /// Gets all genres represented in the book barn.

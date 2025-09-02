@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BookBarn.Api.Client\BookBarn.Api.Client.csproj" />
     <ProjectReference Include="..\BookBarn.Crawler.GoodReads\BookBarn.Crawler.GoodReads.csproj" />
     <ProjectReference Include="..\BookBarn.Crawler\BookBarn.Crawler.csproj" />
   </ItemGroup>

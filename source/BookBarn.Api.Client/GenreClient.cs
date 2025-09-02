@@ -1,13 +1,13 @@
 ﻿using BookBarn.Model;
-using BookBarn.Model.API.v1;
+using BookBarn.Api.v1;
 
 namespace BookBarn.Api.Client
 {
-    public class GenreClient : ApiClient, IGenresController
+    public class GenreClient : ApiClient, IGenresService
     {
-        public GenreClient(Uri endpoint) : base(new Uri(endpoint, "/v1/Genres")) { }
+        public GenreClient(Uri endpoint) : base(endpoint) { }
 
-        public GenreClient(HttpClient client, Uri endpoint) : base(client, new Uri(endpoint, "/v1/Genres")) { }
+        public GenreClient(HttpClient client) : base(client) { }
 
         public async Task<IEnumerable<Genre>> Get()
         {
@@ -17,6 +17,11 @@ namespace BookBarn.Api.Client
         public async Task<Genre> Get(string name)
         {
             return await base.GetAsync<Genre>(path: name);
+        }
+
+        protected override string GetRoute()
+        {
+            return "/api/v1/Genres";
         }
     }
 }

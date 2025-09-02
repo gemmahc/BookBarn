@@ -33,15 +33,16 @@
 
                 var result = new CrawlerResult(Endpoint, Result.Success, this.GetType());
 
-                foreach(var kvp in _toDispatch)
+                foreach (var kvp in _toDispatch)
                 {
                     result.ToDispatch.Add(kvp.Key, kvp.Value);
                 }
 
                 return result;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 return new CrawlerResult(Endpoint, Result.Failure, this.GetType());
             }
         }
@@ -54,7 +55,7 @@
         /// <exception cref="AmbiguiousCrawlerException">Thrown if crawler of multiple types is requested for this endpoint.</exception>
         protected void DispatchChild<T>(Uri endpoint) where T : Crawler
         {
-            if(_toDispatch.ContainsKey(endpoint))
+            if (_toDispatch.ContainsKey(endpoint))
             {
                 if (_toDispatch[endpoint] != typeof(T))
                 {

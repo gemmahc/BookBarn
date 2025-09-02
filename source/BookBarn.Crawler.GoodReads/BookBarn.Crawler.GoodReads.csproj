@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BookBarn.Api.Client\BookBarn.Api.Client.csproj" />
     <ProjectReference Include="..\BookBarn.Model\BookBarn.Model.csproj" />
     <ProjectReference Include="..\BookBarn.Crawler\BookBarn.Crawler.csproj" />
   </ItemGroup>

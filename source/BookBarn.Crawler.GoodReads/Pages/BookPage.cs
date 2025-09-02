@@ -132,6 +132,8 @@ namespace BookBarn.Crawler.GoodReads
                 throw new PageParseException(Endpoint, $"Title or Author not found on page [{Endpoint}]. Invalid book.");
             }
 
+            book.Id = book.GetId();
+
             return Task.FromResult(book);
         }
     }

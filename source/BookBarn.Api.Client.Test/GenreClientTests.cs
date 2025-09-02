@@ -1,10 +1,5 @@
 ﻿using BookBarn.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http.Json;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BookBarn.Api.Client.Test
 {
@@ -24,16 +19,17 @@ namespace BookBarn.Api.Client.Test
                 HttpResponseMessage res = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
                 res.Content = JsonContent.Create<IEnumerable<Genre>>(new List<Genre>() { sampleGenre });
 
-                Uri expected = new Uri("https://example.com/v1/Genres");
+                Uri expected = new Uri("https://example.com/api/v1/Genres");
                 Assert.Equal(expected, req.RequestUri);
                 Assert.Equal(HttpMethod.Get, req.Method);
 
                 return res;
             });
 
-            GenreClient client = new GenreClient(new HttpClient(handler), new Uri("https://example.com"));
+            GenreClient client = new GenreClient(GetHttpClient(handler));
 
             var result = await client.Get();
+            Assert.NotNull(result);
             Assert.Single(result);
             Assert.Equal(sampleGenre.Id, result.Single().Id);
         }
@@ -52,19 +48,27 @@ namespace BookBarn.Api.Client.Test
                 HttpResponseMessage res = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
                 res.Content = JsonContent.Create<Genre>(sampleGenre);
 
-                Uri expected = new Uri($"https://example.com/v1/Genres/{sampleGenre.Id}");
+                Uri expected = new Uri($"https://example.com/api/v1/Genres/{sampleGenre.Id}");
                 Assert.Equal(expected, req.RequestUri);
                 Assert.Equal(HttpMethod.Get, req.Method);
 
                 return res;
             });
 
-            GenreClient client = new GenreClient(new HttpClient(handler), new Uri("https://example.com"));
+            GenreClient client = new GenreClient(GetHttpClient(handler));
 
             var result = await client.Get(sampleGenre.Id);
             Assert.NotNull(result);
             Assert.Equal(sampleGenre.Id, result.Id);
             Assert.Equal(sampleGenre.Count, result.Count);
+        }
+
+        private HttpClient GetHttpClient(HttpMessageHandler handler)
+        {
+            HttpClient client = new HttpClient(handler);
+            client.BaseAddress = new Uri("https://example.com");
+
+            return client;
         }
     }
 }

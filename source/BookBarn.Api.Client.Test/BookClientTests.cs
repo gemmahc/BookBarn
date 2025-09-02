@@ -17,16 +17,17 @@ namespace BookBarn.Api.Client.Test
                 HttpResponseMessage res = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
                 res.Content = JsonContent.Create<IEnumerable<Book>>(new List<Book>() { new Book(), new Book() });
 
-                Uri expected = new Uri("https://example.com/v1/Books?count=25");
+                Uri expected = new Uri("https://example.com/api/v1/Books?count=25");
                 Assert.Equal(expected, req.RequestUri);
                 Assert.Equal(HttpMethod.Get, req.Method);
 
                 return res;
             });
 
-            BookClient client = new BookClient(new HttpClient(handler), new Uri("https://example.com"));
+            BookClient client = new BookClient(GetHttpClient(handler));
 
             var result = await client.Get(count: 25);
+            Assert.NotNull(result);
             Assert.Equal(2, result.Count());
         }
 
@@ -43,14 +44,14 @@ namespace BookBarn.Api.Client.Test
                 HttpResponseMessage res = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
                 res.Content = JsonContent.Create<Book>(new Book() { Id = sampleId });
 
-                Uri expected = new Uri($"https://example.com/v1/Books/{sampleId}");
+                Uri expected = new Uri($"https://example.com/api/v1/Books/{sampleId}");
                 Assert.Equal(expected, req.RequestUri);
                 Assert.Equal(HttpMethod.Get, req.Method);
 
                 return res;
             });
 
-            BookClient client = new BookClient(new HttpClient(handler), new Uri("https://example.com"));
+            BookClient client = new BookClient(GetHttpClient(handler));
 
             var result = await client.Get(sampleId);
             Assert.NotNull(result);
@@ -75,14 +76,14 @@ namespace BookBarn.Api.Client.Test
                 HttpResponseMessage res = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
                 res.Content = JsonContent.Create<Book>(content);
 
-                Uri expected = new Uri($"https://example.com/v1/Books");
+                Uri expected = new Uri($"https://example.com/api/v1/Books");
                 Assert.Equal(expected, req.RequestUri);
                 Assert.Equal(HttpMethod.Post, req.Method);
 
                 return res;
             });
 
-            BookClient client = new BookClient(new HttpClient(handler), new Uri("https://example.com"));
+            BookClient client = new BookClient(GetHttpClient(handler));
 
             var result = await client.Post(sampleBook);
             Assert.NotNull(result);
@@ -108,14 +109,14 @@ namespace BookBarn.Api.Client.Test
                 HttpResponseMessage res = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
                 res.Content = JsonContent.Create<Book>(content);
 
-                Uri expected = new Uri($"https://example.com/v1/Books/{sampleId}");
+                Uri expected = new Uri($"https://example.com/api/v1/Books/{sampleId}");
                 Assert.Equal(expected, req.RequestUri);
                 Assert.Equal(HttpMethod.Put, req.Method);
 
                 return res;
             });
 
-            BookClient client = new BookClient(new HttpClient(handler), new Uri("https://example.com"));
+            BookClient client = new BookClient(GetHttpClient(handler));
 
             var result = await client.Put(sampleId, sampleBook);
             Assert.NotNull(result);
@@ -134,17 +135,16 @@ namespace BookBarn.Api.Client.Test
 
                 HttpResponseMessage res = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
 
-                Uri expected = new Uri($"https://example.com/v1/Books/{sampleId}");
+                Uri expected = new Uri($"https://example.com/api/v1/Books/{sampleId}");
                 Assert.Equal(expected, req.RequestUri);
                 Assert.Equal(HttpMethod.Delete, req.Method);
 
                 return res;
             });
 
-            BookClient client = new BookClient(new HttpClient(handler), new Uri("https://example.com"));
+            BookClient client = new BookClient(GetHttpClient(handler));
 
             await client.Delete(sampleId);
-
         }
 
         [Fact]
@@ -168,18 +168,29 @@ namespace BookBarn.Api.Client.Test
                 HttpResponseMessage res = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
                 res.Content = JsonContent.Create<IEnumerable<Book>>(new List<Book>() { sampleBook });
 
-                Uri expected = new Uri($"https://example.com/v1/Books/Query");
+                Uri expected = new Uri($"https://example.com/api/v1/Books/Query");
                 Assert.Equal(expected, req.RequestUri);
                 Assert.Equal(HttpMethod.Post, req.Method);
 
                 return res;
             });
 
-            BookClient client = new BookClient(new HttpClient(handler), new Uri("https://example.com"));
+            BookClient client = new BookClient(GetHttpClient(handler));
 
             var result = await client.Query(sampleQuery);
+            Assert.NotNull(result);
             Assert.Single(result);
             Assert.Equal(sampleBook.Id, result.Single().Id);
+        }
+
+        private HttpClient GetHttpClient(HttpMessageHandler handler)
+        {
+            HttpClient httpClient = new HttpClient(handler)
+            {
+                BaseAddress = new Uri("https://example.com")
+            };
+
+            return httpClient;
         }
     }
 }

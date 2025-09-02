@@ -1,9 +1,11 @@
-﻿namespace BookBarn.Model.API.v1
+﻿using BookBarn.Model;
+
+namespace BookBarn.Api.v1
 {
     /// <summary>
     /// Interface for interacting with Books in the Book Barn.
     /// </summary>
-    public interface IBooksController
+    public interface IBooksService
     {
         /// <summary>
         /// Gets a specified number of books from the collection starting after the book Id specified.
@@ -34,7 +36,7 @@
         public Task<Book> Put(string id, Book book);
 
         /// <summary>
-        /// Deletes the book with the matchin id from the book barn.
+        /// Deletes the book with the matching id from the book barn.
         /// </summary>
         /// <param name="id">The book id.</param>
         /// <returns>Waitable.</returns>

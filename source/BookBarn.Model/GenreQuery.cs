@@ -5,6 +5,9 @@
     /// </summary>
     public class GenreQuery
     {
-        // Placeholder
+        /// <summary>
+        /// The id of the genre (e.g. "Fiction")
+        /// </summary>
+        public string? Id { get; set; }
     }
 }
