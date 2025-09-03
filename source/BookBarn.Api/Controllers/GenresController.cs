@@ -10,10 +10,12 @@ namespace BookBarn.Api.Controllers
     public class GenresController : ControllerBase
     {
         private GenresControllerCore _core;
+        private ILogger _logger;
 
-        public GenresController(IGenreDataProvider genreProvider)
+        public GenresController(IGenreDataProvider genreProvider, ILogger<GenresController> logger)
         {
-            _core = new GenresControllerCore(genreProvider);
+            _logger = logger;
+            _core = new GenresControllerCore(genreProvider, _logger);
         }
 
         [HttpGet]
@@ -21,12 +23,18 @@ namespace BookBarn.Api.Controllers
         {
             try
             {
+                _logger.LogInformation("Getting all genres");
                 var result = await _core.Get();
                 return Ok(result);
             }
             catch (DataException ex)
             {
-                return this.ResultFromDataError(ex);
+                return this.ResultFromDataError(ex, _logger);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get the genre list");
+                throw;
             }
         }
 
@@ -35,12 +43,18 @@ namespace BookBarn.Api.Controllers
         {
             try
             {
+                _logger.LogInformation("Getting genre information for [{genre}]", name);
                 var result = await _core.Get(name);
                 return Ok(result);
             }
             catch (DataException ex)
             {
-                return this.ResultFromDataError(ex);
+                return this.ResultFromDataError(ex, _logger);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get genre information for [{genre}]", name);
+                throw;
             }
         }
     }

@@ -7,10 +7,12 @@ namespace BookBarn.Api.Controllers
     public class MediaControllerCore : IMediaService
     {
         private IMediaStorageProvider _storageProvider;
+        private ILogger _logger;
 
-        public MediaControllerCore(IMediaStorageProvider storageProvider)
+        public MediaControllerCore(IMediaStorageProvider storageProvider, ILogger logger)
         {
             _storageProvider = storageProvider;
+            _logger = logger;
         }
 
         public async Task Delete(string id)

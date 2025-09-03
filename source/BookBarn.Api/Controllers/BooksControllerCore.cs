@@ -13,10 +13,12 @@ namespace BookBarn.Api.Controllers
     public class BooksControllerCore : IBooksService
     {
         private IBookDataProvider _dataProvider;
+        private ILogger _logger;
 
-        public BooksControllerCore(IBookDataProvider dataProvider)
+        public BooksControllerCore(IBookDataProvider dataProvider, ILogger logger)
         {
             _dataProvider = dataProvider;
+            _logger = logger;
         }
 
         public async Task Delete(string id)
@@ -82,7 +84,7 @@ namespace BookBarn.Api.Controllers
 
             Book updated = await _dataProvider.Upsert(book);
 
-            if(updated == null)
+            if (updated == null)
             {
                 throw new DataException(DataError.General);
             }

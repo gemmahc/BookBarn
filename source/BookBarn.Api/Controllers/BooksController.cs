@@ -10,10 +10,13 @@ namespace BookBarn.Api.Controllers
     public class BooksController : ControllerBase
     {
         private BooksControllerCore _core;
+        private ILogger _logger;
 
-        public BooksController(IBookDataProvider bookDataProvider)
+        public BooksController(IBookDataProvider bookDataProvider, ILogger<BooksController> logger)
         {
-            _core = new BooksControllerCore(bookDataProvider);
+            _logger = logger;
+
+            _core = new BooksControllerCore(bookDataProvider, _logger);
         }
 
         [HttpGet]
@@ -21,12 +24,18 @@ namespace BookBarn.Api.Controllers
         {
             try
             {
+                _logger.LogInformation("Getting [{count}] books starting after id [{id}]", count, afterId);
                 var result = await _core.Get(count, afterId);
                 return Ok(result);
             }
             catch (DataException ex)
             {
-                return this.ResultFromDataError(ex);
+                return this.ResultFromDataError(ex, _logger);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to return range result count [{count}] after id [{afterId}]", count, afterId);
+                throw;
             }
         }
 
@@ -35,12 +44,18 @@ namespace BookBarn.Api.Controllers
         {
             try
             {
+                _logger.LogInformation("Getting book with id [{id}]", id);
                 var result = await _core.Get(id);
                 return Ok(result);
             }
             catch (DataException ex)
             {
-                return this.ResultFromDataError(ex);
+                return this.ResultFromDataError(ex, _logger);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Get failed for [{id}]", id);
+                throw;
             }
         }
 
@@ -49,11 +64,17 @@ namespace BookBarn.Api.Controllers
         {
             try
             {
+                _logger.LogInformation("Adding book with id [{id}]", book.Id);
                 Book created = await _core.Post(book);
             }
             catch (DataException ex)
             {
-                return this.ResultFromDataError(ex);
+                return this.ResultFromDataError(ex, _logger);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to post book with id [{id}]", book.Id);
+                throw;
             }
 
             var request = this.HttpContext.Request;
@@ -65,6 +86,7 @@ namespace BookBarn.Api.Controllers
                 Path = $"{request.Path}/{book.Id}"
             };
 
+            _logger.LogInformation("Created book resource [{id}] at [{uri}]", book.Id, uriBuidler.Uri);
             return Created(uriBuidler.Uri, book);
         }
 
@@ -73,12 +95,18 @@ namespace BookBarn.Api.Controllers
         {
             try
             {
+                _logger.LogInformation("Updating book with id [{id}]", id);
                 var result = await _core.Put(id, book);
                 return Ok(result);
             }
             catch (DataException ex)
             {
-                return this.ResultFromDataError(ex);
+                return this.ResultFromDataError(ex, _logger);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to put resource [{id}]", id);
+                throw;
             }
         }
 
@@ -87,12 +115,18 @@ namespace BookBarn.Api.Controllers
         {
             try
             {
+                _logger.LogInformation("Deleting book with id [{id}]", id);
                 await _core.Delete(id);
                 return NoContent();
             }
             catch (DataException ex)
             {
-                return this.ResultFromDataError(ex);
+                return this.ResultFromDataError(ex, _logger);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete resource [{id}]", id);
+                throw;
             }
         }
 
@@ -101,6 +135,7 @@ namespace BookBarn.Api.Controllers
         {
             try
             {
+                _logger.LogInformation("Executing query: {query}", query.ToJson());
                 var result = await _core.Query(query);
 
                 if (result.Any())
@@ -114,7 +149,12 @@ namespace BookBarn.Api.Controllers
             }
             catch (DataException ex)
             {
-                return this.ResultFromDataError(ex);
+                return this.ResultFromDataError(ex, _logger);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to execute query");
+                throw;
             }
         }
     }

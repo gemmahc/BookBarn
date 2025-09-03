@@ -1,11 +1,21 @@
+using BookBarn.Api;
 using BookBarn.Api.Providers;
-using BookBarn.Api.v1;
 using BookBarn.Model.Providers;
-using System.Runtime.CompilerServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+// Add logging.
+if (builder.Environment.IsDevelopment())
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddConsole();
+}
+else
+{
+    // production logger impl (seilog/appinsight, don't know yet)
+}
 
 // Add data providers to container
 string? dataSourceConn = builder.Configuration.GetConnectionString("DataSource");
@@ -36,6 +46,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

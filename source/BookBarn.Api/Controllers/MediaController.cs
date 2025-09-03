@@ -10,10 +10,12 @@ namespace BookBarn.Api.Controllers
     public class MediaController : ControllerBase
     {
         private MediaControllerCore _core;
+        private ILogger _logger;
 
-        public MediaController(IMediaStorageProvider storageProvider)
+        public MediaController(IMediaStorageProvider storageProvider, ILogger<MediaController> logger)
         {
-            _core = new MediaControllerCore(storageProvider);
+            _logger = logger;
+            _core = new MediaControllerCore(storageProvider, _logger);
         }
 
         [HttpDelete("{id}")]
@@ -21,6 +23,7 @@ namespace BookBarn.Api.Controllers
         {
             try
             {
+                _logger.LogInformation("Deleting media with id [{id}]", id);
                 await _core.Delete(id);
 
                 return NoContent();
@@ -28,7 +31,12 @@ namespace BookBarn.Api.Controllers
             }
             catch (DataException ex)
             {
-                return this.ResultFromDataError(ex);
+                return this.ResultFromDataError(ex, _logger);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed deleting media with id [{id}]", id);
+                throw;
             }
         }
 
@@ -37,6 +45,7 @@ namespace BookBarn.Api.Controllers
         {
             try
             {
+                _logger.LogInformation("Getting media with id [{id}]", id);
                 var result = await _core.Get(id);
 
                 return Ok(result);
@@ -44,11 +53,13 @@ namespace BookBarn.Api.Controllers
             }
             catch (DataException ex)
             {
-                return this.ResultFromDataError(ex);
+                return this.ResultFromDataError(ex, _logger);
             }
-
-
-            throw new NotImplementedException();
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get media with id [{id}]", id);
+                throw;
+            }
         }
 
         [HttpGet("[action]/{id}")]
@@ -62,7 +73,12 @@ namespace BookBarn.Api.Controllers
             }
             catch (DataException ex)
             {
-                return this.ResultFromDataError(ex);
+                return this.ResultFromDataError(ex, _logger);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get write token for media with id [{id}]", id);
+                throw;
             }
         }
 

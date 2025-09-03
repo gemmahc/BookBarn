@@ -1,11 +1,12 @@
-﻿using System.Text;
+﻿using Newtonsoft.Json;
+using System.Text;
 
 namespace BookBarn.Model
 {
     /// <summary>
-    /// Extension methods for the <c>Book</c> class.
+    /// Extension methods for contract objects.
     /// </summary>
-    public static class BookExtensions
+    public static class Extensions
     {
         /// <summary>
         /// Gets the storage Id for this book instance.
@@ -29,6 +30,20 @@ namespace BookBarn.Model
 
                 return Convert.ToHexString(hash).ToLowerInvariant();
             }
+        }
+
+        /// <summary>
+        /// Gets the json representation of this query
+        /// </summary>
+        /// <param name="query">The query</param>
+        /// <returns>The json string.</returns>
+        public static string ToJson(this BookQuery query)
+        {
+            JsonSerializerSettings settings = new JsonSerializerSettings();
+            settings.Formatting = Formatting.Indented;
+            settings.NullValueHandling = NullValueHandling.Ignore;
+
+            return JsonConvert.SerializeObject(query, settings);
         }
     }
 }

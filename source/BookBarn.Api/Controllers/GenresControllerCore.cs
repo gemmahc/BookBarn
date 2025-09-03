@@ -8,15 +8,17 @@ namespace BookBarn.Api.Controllers
     public class GenresControllerCore : IGenresService
     {
         private IGenreDataProvider _genreProvider;
+        private ILogger _logger;
 
-        public GenresControllerCore(IGenreDataProvider genreProvider)
+        public GenresControllerCore(IGenreDataProvider genreProvider, ILogger logger)
         {
             _genreProvider = genreProvider;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<Genre>> Get()
         {
-            var genres = await _genreProvider.QueryGenres(new GenreQuery());
+            var genres = await _genreProvider.GetGenres();
 
             if (genres == null)
             {
