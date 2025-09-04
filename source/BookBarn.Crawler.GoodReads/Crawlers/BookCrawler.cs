@@ -4,6 +4,7 @@ using BookBarn.Model;
 
 namespace BookBarn.Crawler.GoodReads
 {
+    [CrawlerPriority(1)]
     public class BookCrawler : Crawler
     {
         private IMediaService _mediaService;

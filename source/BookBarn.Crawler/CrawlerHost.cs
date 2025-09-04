@@ -1,5 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace BookBarn.Crawler
 {
@@ -10,6 +12,7 @@ namespace BookBarn.Crawler
     {
         private ICrawlerFactory _crawlerFactory;
         private ICrawlerQueue _queue;
+        private ILogger _logger;
         private CrawlerHostConfiguration _config;
         private ConcurrentDictionary<int, IObserver<HostInfo>> _observers;
         private List<Task<CrawlerResult>> _tasks;
@@ -25,7 +28,7 @@ namespace BookBarn.Crawler
         /// <param name="config">The host configuration.</param>
         /// <param name="crawlerFactory">The factory used to generate instances of the requested crawlers.</param>
         /// <param name="queue">The queue the host uses for processing requests.</param>
-        public CrawlerHost(CrawlerHostConfiguration config, ICrawlerFactory crawlerFactory, ICrawlerQueue queue)
+        public CrawlerHost(CrawlerHostConfiguration config, ICrawlerFactory crawlerFactory, ICrawlerQueue queue, ILogger logger)
         {
             _config = config;
             _crawlerFactory = crawlerFactory;
@@ -33,6 +36,7 @@ namespace BookBarn.Crawler
             _visits = new ConcurrentDictionary<Uri, Visit>();
             _tasks = new List<Task<CrawlerResult>>();
             _observers = new ConcurrentDictionary<int, IObserver<HostInfo>>();
+            _logger = logger;
             Info = new HostInfo();
         }
 
@@ -67,7 +71,7 @@ namespace BookBarn.Crawler
 
                     if (visit.LastResult != Result.Pending)
                     {
-                        // ToDo: Log duplicate and continue
+                        _logger.LogInformation("Skipping duplicate endpoint [{endpoint}]", request.Endpoint);
                         Info.DuplicatesSkippedLastCycle.Add(request.Endpoint);
                         continue;
                     }
@@ -86,15 +90,18 @@ namespace BookBarn.Crawler
                                         old.Visits += 1;
                                         return old;
                                     });
+
+                        _logger.LogInformation("Running crawler [{type}] for endpoint [{endpoint}]", request.RequestedCrawler.Name, request.Endpoint);
                         var task = Task<CrawlerResult>.Run(async () => await crawler.RunAsync());
                         _tasks.Add(task);
 
                         Info.ScheduledLastCycle.Add(request.Endpoint);
                         Info.CurrentlyRunning.Add(request.Endpoint);
                     }
-                    catch (UnknownCrawlerTypeException)
+                    catch (UnknownCrawlerTypeException ex)
                     {
                         // log and skip the request.
+                        _logger.LogError(ex, "Unknown crawler type [{type}] encountered. Skipping.", ex.Type.FullName);
                     }
                 }
 
@@ -109,6 +116,7 @@ namespace BookBarn.Crawler
 
                 if (_tasks.Count == 0 && !await _queue.HasWork())
                 {
+                    _logger.LogInformation("No pending work. Sleeping.");
                     Info.HostIdle = true;
                     // No tasks pending in the queue and no tasks running. Sleep for a bit and check again.
                     await Task.Delay(TimeSpan.FromMilliseconds(_config.IdlePollingIntervalMilliseconds));
@@ -117,6 +125,7 @@ namespace BookBarn.Crawler
                 NotifyObservers();
             }
 
+            _logger.LogInformation("Crawler host stopping.");
             ClearObservers();
         }
 
@@ -154,6 +163,12 @@ namespace BookBarn.Crawler
         /// <param name="result">The crawler result.</param>
         private void HandleResult(CrawlerResult result)
         {
+            _logger.LogInformation(
+                "Crawler [{type}] for endpoint [{endpoint}] completed with result [{result}]",
+                result.CrawlerType.Name,
+                result.Endpoint,
+                result.Result
+                );
             Info.CurrentlyRunning.Remove(result.Endpoint);
             Info.CompletedLastCycle++;
 
@@ -170,6 +185,7 @@ namespace BookBarn.Crawler
                     });
 
                 // Queue any of the child crawlers that were dispatched by this crawler.
+                
                 foreach (var kvp in result.ToDispatch)
                 {
                     CrawlRequest request = new CrawlRequest(kvp.Key, kvp.Value);
@@ -217,12 +233,13 @@ namespace BookBarn.Crawler
                     // If we've seen the request on this endpoint previously, the only only condition 
                     // we will re-queue it is if it hasn't exhausted retries on failure
 
-                    // ToDo: Log previous failed result and retry message.
+                    _logger.LogInformation("Endpoint [{endpoint}] previously failed {visits} times. Retrying.", request.Endpoint, visit.Visits);
                 }
                 else
                 {
                     // Already visited this endpoint (either successfully or exhausted retries), don't queue it again.
                     Info.DuplicatesSkippedLastCycle.Add(request.Endpoint);
+                    _logger.LogInformation("Skip adding duplicate endpoint [{endpoint}] to queue.", request.Endpoint);
                     return;
                 }
             }
@@ -237,6 +254,7 @@ namespace BookBarn.Crawler
                             return old;
                         });
 
+            _logger.LogInformation("Adding crawler [{type}] for endpoint [{endpoint}] to the queue.", request.RequestedCrawler.Name, request.Endpoint);
             _queue.Enqueue(request);
         }
         #region IObservable

@@ -3,6 +3,7 @@ using BookBarn.Model;
 
 namespace BookBarn.Crawler.GoodReads
 {
+    [CrawlerPriority(5)]
     public class SeriesCrawler : Crawler
     {
         private PartitionedRequestThrottle _throttle;
