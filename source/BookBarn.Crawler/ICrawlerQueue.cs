@@ -23,5 +23,11 @@
         /// </summary>
         /// <returns>The next request in the queue. Null if no work to do.</returns>
         public Task<CrawlRequest?> GetNext();
+
+        /// <summary>
+        /// Gets the count of queued requests.
+        /// </summary>
+        /// <returns>The count of items in the queue.</returns>
+        public Task<int> Count();
     }
 }

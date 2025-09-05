@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using Microsoft.Extensions.Options;
+using System.Collections.Concurrent;
 
 namespace BookBarn.Crawler.Utilities
 {
@@ -12,7 +13,6 @@ namespace BookBarn.Crawler.Utilities
         private RequestThrottleOptions _options;
 
         // Resources used for the packground task cleaning up idle throttle partitions.
-        private TimeSpan? _partitionIdleTimeout;
         private Task? _partitionClearnupWorker;
         private CancellationTokenSource? _tokenSource;
 
@@ -20,18 +20,22 @@ namespace BookBarn.Crawler.Utilities
         /// Creates a new <c>PartitionedRequestThrottle</c> with the specified options.
         /// </summary>
         /// <param name="options">The request throttle options.</param>
-        /// <param name="partitionIdleTimeout">The idle timeout of a partition before it gets disposed of.</param>
-        public PartitionedRequestThrottle(RequestThrottleOptions options, TimeSpan? partitionIdleTimeout = null)
+        public PartitionedRequestThrottle(RequestThrottleOptions options)
         {
             _options = options;
             _throttles = new ConcurrentDictionary<string, RequestThrottle>();
-            _partitionIdleTimeout = partitionIdleTimeout;
-
-            if (_partitionIdleTimeout != null)
+            if (_options.PartitionIdleTTLSeconds.HasValue && _options.PartitionIdleTTLSeconds > 0)
             {
                 StartPartitionCleanupWorker();
             }
         }
+
+        /// <summary>
+        /// Creates a new <c>PartitionedRequestThrottle</c> with the specified options.
+        /// </summary>
+        /// <param name="options">The request throttle options.</param>
+        public PartitionedRequestThrottle(IOptions<RequestThrottleOptions> options) : this(options.Value)
+        { }
 
         /// <summary>
         /// Executes a unit of work within the specified partition.
@@ -46,7 +50,6 @@ namespace BookBarn.Crawler.Utilities
 
             if (!_throttles.ContainsKey(partitionKey))
             {
-                Console.WriteLine($"Adding throttle for key [{partitionKey}]");
                 _throttles.AddOrUpdate(
                     partitionKey,
                     new RequestThrottle(_options),
@@ -69,7 +72,7 @@ namespace BookBarn.Crawler.Utilities
                     while (!_tokenSource.IsCancellationRequested)
                     {
                         Task.Delay(TimeSpan.FromSeconds(10), _tokenSource.Token).GetAwaiter().GetResult();
-                        var expired = _throttles.Where(kvp => kvp.Value.IdleDuration > _partitionIdleTimeout).ToList();
+                        var expired = _throttles.Where(kvp => kvp.Value.IdleDuration.HasValue && kvp.Value.IdleDuration.Value.TotalSeconds > _options.PartitionIdleTTLSeconds).ToList();
 
                         foreach (var kvp in expired)
                         {

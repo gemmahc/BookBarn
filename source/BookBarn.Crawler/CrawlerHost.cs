@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace BookBarn.Crawler
 {
@@ -71,7 +70,7 @@ namespace BookBarn.Crawler
 
                     if (visit.LastResult != Result.Pending)
                     {
-                        _logger.LogInformation("Skipping duplicate endpoint [{endpoint}]", request.Endpoint);
+                        _logger.LogTrace("Skipping duplicate endpoint [{endpoint}]", request.Endpoint);
                         Info.DuplicatesSkippedLastCycle.Add(request.Endpoint);
                         continue;
                     }
@@ -233,13 +232,13 @@ namespace BookBarn.Crawler
                     // If we've seen the request on this endpoint previously, the only only condition 
                     // we will re-queue it is if it hasn't exhausted retries on failure
 
-                    _logger.LogInformation("Endpoint [{endpoint}] previously failed {visits} times. Retrying.", request.Endpoint, visit.Visits);
+                    _logger.LogWarning("Endpoint [{endpoint}] previously failed {visits} times. Retrying.", request.Endpoint, visit.Visits);
                 }
                 else
                 {
                     // Already visited this endpoint (either successfully or exhausted retries), don't queue it again.
                     Info.DuplicatesSkippedLastCycle.Add(request.Endpoint);
-                    _logger.LogInformation("Skip adding duplicate endpoint [{endpoint}] to queue.", request.Endpoint);
+                    _logger.LogTrace("Skip adding duplicate endpoint [{endpoint}] to queue.", request.Endpoint);
                     return;
                 }
             }

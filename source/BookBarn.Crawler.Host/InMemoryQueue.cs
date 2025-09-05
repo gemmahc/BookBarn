@@ -1,15 +1,14 @@
-﻿using BookBarn.Crawler.GoodReads;
-using Newtonsoft.Json;
-using System.Text.Json.Serialization;
-
-namespace BookBarn.Crawler.Host
+﻿namespace BookBarn.Crawler.Host
 {
     public class InMemoryQueue : ICrawlerQueue
     {
-        object _lock = new object();
+        PriorityQueue<CrawlRequest, int> _queue;
+        object _lock;
 
         public InMemoryQueue()
         {
+            _lock = new object();
+            _queue = new PriorityQueue<CrawlRequest, int>();
         }
 
         public Task Enqueue(CrawlRequest request)
@@ -20,9 +19,7 @@ namespace BookBarn.Crawler.Host
 
             lock (_lock)
             {
-                var queue = GetQueue();
-                queue?.Enqueue(request, priority);
-                SetQueue(queue);
+                _queue.Enqueue(request, priority);
             }
 
             return Task.CompletedTask;
@@ -34,12 +31,10 @@ namespace BookBarn.Crawler.Host
 
             lock (_lock)
             {
-                var queue = GetQueue();
-                if (queue?.Count > 0)
+                if (_queue.Count > 0)
                 {
-                    request = queue.Dequeue();
+                    request = _queue.Dequeue();
                 }
-                SetQueue(queue);
             }
 
             return Task.FromResult(request);
@@ -49,51 +44,16 @@ namespace BookBarn.Crawler.Host
         {
             lock (_lock)
             {
-                var queue = GetQueue();
-                return Task.FromResult(queue?.Count > 0);
+                return Task.FromResult(_queue.Count > 0);
             }
         }
 
-        private PriorityQueue<CrawlRequest, int>? GetQueue()
+        public Task<int> Count()
         {
-            var queue = new PriorityQueue<CrawlRequest, int>();
-
-            if(!File.Exists("Queue.txt"))
+            lock(_lock)
             {
-                return queue;
+                return Task.FromResult(_queue.Count);
             }
-
-            string[] queueTxt = File.ReadAllLines("Queue.txt");
-            foreach (string line in queueTxt)
-            {
-                var seg = line.Split('`');
-                Uri ep = new Uri(seg[0]);
-                Type? t = Type.GetType(seg[1]) ?? typeof(Crawler);
-                int p = int.Parse(seg[2]);
-
-                queue.Enqueue(new CrawlRequest(ep, t), p);
-            }
-
-            return queue;
-        }
-
-        private void SetQueue(PriorityQueue<CrawlRequest, int>? queue)
-        {
-            if (queue == null)
-            {
-                return;
-            }
-            List<string> lines = new List<string>();
-            while(queue.Count > 0)
-            {
-                var item = queue.Dequeue();
-                CrawlerPriorityAttribute? priorityAttr = Attribute.GetCustomAttribute(item.RequestedCrawler, typeof(CrawlerPriorityAttribute)) as CrawlerPriorityAttribute;
-                int priority = priorityAttr?.Priority ?? 1;
-                string line = $"{item.Endpoint}`{item.RequestedCrawler.AssemblyQualifiedName}`{priority}";
-                lines.Add(line);
-            }
-
-            File.WriteAllLines("Queue.txt", lines);
         }
     }
 }

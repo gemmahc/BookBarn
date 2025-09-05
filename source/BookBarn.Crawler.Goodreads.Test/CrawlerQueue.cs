@@ -9,6 +9,11 @@
             _queue = new Queue<CrawlRequest>();
         }
 
+        public Task<int> Count()
+        {
+            return Task.FromResult(_queue.Count);
+        }
+
         public Task Enqueue(CrawlRequest request)
         {
             _queue.Enqueue(request);

@@ -69,6 +69,14 @@ namespace BookBarn.Crawler.GoodReads
                 else if (key.StartsWith("Book:"))
                 {
                     book.Title = item.Value["title"];
+
+                    if(string.IsNullOrEmpty(book.Title))
+                    {
+                        // Not the complete book entry.
+                        // Continue and encounter the complete entry later or fail at the end with incomplete book details.
+                        continue;
+                    }
+
                     book.Description = item.Value["description"];
                     book.CoverImage = item.Value["imageUrl"];
                     book.Format = item.Value["details"]["format"];
@@ -99,6 +107,16 @@ namespace BookBarn.Crawler.GoodReads
                     {
                         book.Author = cont[authorRef]["name"];
                     }
+
+                    // Publish date fallback (current edition) if not in the Work section (first edition)
+                    long? pubTime = item.Value["details"]["publicationTime"];
+                    if (pubTime.HasValue && book.PublishDate == null)
+                    {
+                        DateTime pubDate = DateTime.UnixEpoch.AddMilliseconds(pubTime.Value);
+
+                        book.PublishDate = pubDate;
+                        book.PublishYear = pubDate.Year;
+                    }
                 }
                 else if (key.StartsWith("Series:"))
                 {
@@ -110,11 +128,14 @@ namespace BookBarn.Crawler.GoodReads
                     book.Rating = item.Value["stats"]["averageRating"];
                     book.RatingCount = item.Value["stats"]["ratingsCount"];
 
-                    long pubTime = item.Value["details"]["publicationTime"];
-                    DateTime pubDate = DateTime.UnixEpoch.AddMilliseconds(pubTime);
+                    long? pubTime = item.Value["details"]["publicationTime"];
+                    if (pubTime.HasValue)
+                    {
+                        DateTime pubDate = DateTime.UnixEpoch.AddMilliseconds(pubTime.Value);
 
-                    book.PublishDate = pubDate;
-                    book.PublishYear = pubDate.Year;
+                        book.PublishDate = pubDate;
+                        book.PublishYear = pubDate.Year;
+                    }
                 }
                 else if (key.StartsWith("Contributor:"))
                 {

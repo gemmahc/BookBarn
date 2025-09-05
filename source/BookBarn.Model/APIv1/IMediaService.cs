@@ -1,6 +1,4 @@
-﻿using BookBarn.Model;
-
-namespace BookBarn.Api.v1
+﻿namespace BookBarn.Model.Api.v1
 {
     public interface IMediaService
     {

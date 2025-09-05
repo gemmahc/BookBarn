@@ -1,5 +1,16 @@
 {
   "profiles": {
+    "http": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5231"
+    },
     "BookBarn.Crawler.Host": {
       "commandName": "Project",
       "environmentVariables": {

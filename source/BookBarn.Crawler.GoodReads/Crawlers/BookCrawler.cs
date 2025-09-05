@@ -1,6 +1,6 @@
-﻿using BookBarn.Api.v1;
-using BookBarn.Crawler.Utilities;
+﻿using BookBarn.Crawler.Utilities;
 using BookBarn.Model;
+using BookBarn.Model.Api.v1;
 
 namespace BookBarn.Crawler.GoodReads
 {
@@ -22,7 +22,7 @@ namespace BookBarn.Crawler.GoodReads
 
         protected override async Task RunCrawlerAsync()
         {
-            Console.WriteLine($"Crawling: [{Endpoint}]");
+            //Console.WriteLine($"Crawling: [{Endpoint}]");
             var page = new BookPage(Endpoint, _throttle);
 
             // Get the page and extract content into object.

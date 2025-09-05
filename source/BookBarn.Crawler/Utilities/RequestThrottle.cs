@@ -21,7 +21,7 @@ namespace BookBarn.Crawler.Utilities
 
             var opts = new TokenBucketRateLimiterOptions()
             {
-                ReplenishmentPeriod = _options.Interval,
+                ReplenishmentPeriod = TimeSpan.FromSeconds(_options.IntervalSeconds),
                 TokensPerPeriod = _options.MaxConcurrentRequests,
                 TokenLimit = _options.MaxConcurrentRequests,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,

@@ -1,19 +1,17 @@
-﻿namespace BookBarn.Crawler.Test
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+
+namespace BookBarn.Crawler.Test
 {
     public class CrawlerHostTest
     {
         [Fact]
         public async Task HostStartsCyclesAndStops()
         {
-            var queue = new TestCrawlerQueue();
-            var factory = new TestCrawlerFactory();
-            var config = GetConfig();
-
-            CrawlerHost host = new CrawlerHost(config, factory, queue);
+            CrawlerHost host = GetDefaultHost(out var queue, out _, out _);
 
             using (CancellationTokenSource source = new CancellationTokenSource())
             {
-
                 HostObserver obs = new HostObserver();
                 obs.Asserts = (hi) =>
                 {
@@ -38,11 +36,8 @@
         [Fact]
         public async Task HostStartsAndExecutesCrawler()
         {
-            var queue = new TestCrawlerQueue();
-            var factory = new TestCrawlerFactory();
-            var config = GetConfig();
             Uri endpoint = new Uri("https://github.com/gemmahc/BookBarn");
-            CrawlerHost host = new CrawlerHost(config, factory, queue);
+            CrawlerHost host = GetDefaultHost(out var queue, out _, out _);
 
             using (CancellationTokenSource source = new CancellationTokenSource())
             {
@@ -77,11 +72,8 @@
         [Fact]
         public async Task HostStartsMultipleAndExecutesCrawlers()
         {
-            var queue = new TestCrawlerQueue();
-            var factory = new TestCrawlerFactory();
-            var config = GetConfig();
             Uri endpoint = new Uri("https://github.com/gemmahc/BookBarn");
-            CrawlerHost host = new CrawlerHost(config, factory, queue);
+            CrawlerHost host = GetDefaultHost(out var queue, out _, out _);
 
             using (CancellationTokenSource source = new CancellationTokenSource())
             {
@@ -145,11 +137,8 @@
         [Fact]
         public async Task HostSkipsDuplicateCrawlers()
         {
-            var queue = new TestCrawlerQueue();
-            var factory = new TestCrawlerFactory();
-            var config = GetConfig();
             Uri endpoint = new Uri("https://github.com/gemmahc/BookBarn");
-            CrawlerHost host = new CrawlerHost(config, factory, queue);
+            CrawlerHost host = GetDefaultHost(out var queue, out _, out _);
 
             using (CancellationTokenSource source = new CancellationTokenSource())
             {
@@ -203,12 +192,9 @@
         [Fact]
         public async Task HostStartsFailsAndRetriesCrawler()
         {
-            var queue = new TestCrawlerQueue();
-            var factory = new TestCrawlerFactory();
-            var config = GetConfig();
-            config.FailedCrawlerRetryCount = 1;
             Uri endpoint = new Uri("https://github.com/gemmahc/BookBarn");
-            CrawlerHost host = new CrawlerHost(config, factory, queue);
+            CrawlerHost host = GetDefaultHost(out var queue, out var config, out var factory);
+            config.FailedCrawlerRetryCount = 1;
 
             using (CancellationTokenSource source = new CancellationTokenSource())
             {
@@ -279,12 +265,9 @@
         [Fact]
         public async Task HostRunsChildCrawlers()
         {
-            var queue = new TestCrawlerQueue();
-            var factory = new TestCrawlerFactory();
-            var config = GetConfig();
             Uri endpoint = new Uri("https://github.com/gemmahc/BookBarn");
             Uri childEndpoint = new Uri(endpoint, "/child");
-            CrawlerHost host = new CrawlerHost(config, factory, queue);
+            CrawlerHost host = GetDefaultHost(out var queue, out _, out var factory);
 
             using (CancellationTokenSource source = new CancellationTokenSource())
             {
@@ -366,5 +349,17 @@
                 IdlePollingIntervalMilliseconds = 1
             };
         }
+
+        private CrawlerHost GetDefaultHost(out ICrawlerQueue queue, out CrawlerHostConfiguration config, out TestCrawlerFactory factory)
+        {
+            queue = new TestCrawlerQueue();
+            factory = new TestCrawlerFactory();
+            config = GetConfig();
+            var logger = NullLoggerFactory.Instance.CreateLogger("Test");
+
+            return new CrawlerHost(config, factory, queue, logger);
+        }
+
+
     }
 }

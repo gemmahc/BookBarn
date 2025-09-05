@@ -32,5 +32,10 @@
                 return _queue.Any();
             });
         }
+
+        public Task<int> Count()
+        {
+            return Task.FromResult(_queue.Count());
+        }
     }
 }

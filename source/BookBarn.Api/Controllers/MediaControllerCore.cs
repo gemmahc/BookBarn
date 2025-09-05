@@ -1,5 +1,5 @@
-﻿using BookBarn.Api.v1;
-using BookBarn.Model;
+﻿using BookBarn.Model;
+using BookBarn.Model.Api.v1;
 using BookBarn.Model.Providers;
 
 namespace BookBarn.Api.Controllers

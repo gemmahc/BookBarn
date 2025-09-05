@@ -6,9 +6,9 @@ namespace BookBarn.Crawler.GoodReads
     [CrawlerPriority(5)]
     public class SeriesCrawler : Crawler
     {
-        private PartitionedRequestThrottle _throttle;
+        private IRequestThrottle _throttle;
 
-        public SeriesCrawler(Uri entrypoint, PartitionedRequestThrottle throttle) : base(entrypoint)
+        public SeriesCrawler(Uri entrypoint, IRequestThrottle throttle) : base(entrypoint)
         {
             _throttle = throttle;
         }

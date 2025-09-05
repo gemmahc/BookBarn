@@ -16,8 +16,13 @@
         public int MaxQueuedRequests { get; set; }
 
         /// <summary>
-        /// Gets or sets the time interval to throttle within.
+        /// Gets or sets the time interval (in seconds) for the throttle window.
         /// </summary>
-        public TimeSpan Interval { get; set; }
+        public int IntervalSeconds { get; set; }
+
+        /// <summary>
+        /// Gets or sets the seconds before an idle partition is disposed of.
+        /// </summary>
+        public int? PartitionIdleTTLSeconds { get; set; }
     }
 }

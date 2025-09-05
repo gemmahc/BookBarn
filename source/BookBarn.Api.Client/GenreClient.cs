@@ -1,5 +1,5 @@
 ﻿using BookBarn.Model;
-using BookBarn.Api.v1;
+using BookBarn.Model.Api.v1;
 
 namespace BookBarn.Api.Client
 {

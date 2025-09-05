@@ -1,5 +1,5 @@
 ﻿using BookBarn.Crawler.Utilities;
-using BookBarn.Api.v1;
+using BookBarn.Model.Api.v1;
 
 namespace BookBarn.Crawler.GoodReads
 {
@@ -8,21 +8,14 @@ namespace BookBarn.Crawler.GoodReads
         private IBooksService _booksController;
         private IMediaService _mediaController;
         private IHttpClientFactory _httpClientFactory;
-        private PartitionedRequestThrottle _throttle;
+        private IRequestThrottle _throttle;
 
-        public GoodReadsCrawlerFactory(IBooksService booksController, IMediaService mediaController, IHttpClientFactory httpClientFactory)
+        public GoodReadsCrawlerFactory(IBooksService booksController, IMediaService mediaController, IHttpClientFactory httpClientFactory, IRequestThrottle throttle)
         {
             _booksController = booksController;
             _mediaController = mediaController;
             _httpClientFactory = httpClientFactory;
-
-            RequestThrottleOptions throttleOpts = new RequestThrottleOptions()
-            {
-                MaxConcurrentRequests = 2,
-                MaxQueuedRequests = 10000,
-                Interval = TimeSpan.FromSeconds(1)
-            };
-            _throttle = new PartitionedRequestThrottle(throttleOpts);
+            _throttle = throttle;
         }
 
         public Crawler Create<T>(Uri endpoint) where T : Crawler

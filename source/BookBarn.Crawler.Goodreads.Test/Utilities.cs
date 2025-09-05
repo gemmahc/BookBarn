@@ -12,7 +12,7 @@ namespace BookBarn.Crawler.GoodReads.Test
             {
                 RequestThrottleOptions options = new RequestThrottleOptions()
                 {
-                    Interval = TimeSpan.FromSeconds(1),
+                    IntervalSeconds = 1,
                     MaxConcurrentRequests = 2,
                     MaxQueuedRequests = 1000
                 };

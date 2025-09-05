@@ -6,9 +6,9 @@ namespace BookBarn.Crawler.GoodReads
     [CrawlerPriority(10)]
     public class ListCrawler : Crawler
     {
-        PartitionedRequestThrottle _throttle;
+        IRequestThrottle _throttle;
 
-        public ListCrawler(Uri entrypoint, PartitionedRequestThrottle throttle) : base(entrypoint)
+        public ListCrawler(Uri entrypoint, IRequestThrottle throttle) : base(entrypoint)
         {
             _throttle = throttle;
         }
