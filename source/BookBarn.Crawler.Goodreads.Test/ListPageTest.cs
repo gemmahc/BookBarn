@@ -1,17 +1,34 @@
 ﻿using BookBarn.Crawler.GoodReads;
 using HtmlAgilityPack;
+using Moq;
 
 namespace BookBarn.Crawler.GoodReads.Test
 {
     public class ListPageTest
     {
         [Fact]
+        public void ListPageCtorTest()
+        {
+            ListPage page = new ListPage(TestDataHelper.ShortListUrl, new Mock<IPageClient>().Object, Utilities.GetThrottle());
+
+            Assert.Equal(TestDataHelper.ShortListUrl, page.Endpoint);
+            Assert.False(page.Initialized);
+
+            Assert.Throws<ArgumentNullException>(() => new ListPage(null, new Mock<IPageClient>().Object, Utilities.GetThrottle()));
+            Assert.Throws<ArgumentNullException>(() => new ListPage(TestDataHelper.ShortListUrl, null, Utilities.GetThrottle()));
+            Assert.Throws<ArgumentNullException>(() => new ListPage(TestDataHelper.ShortListUrl, new Mock<IPageClient>().Object, null));
+        }
+
+        [Fact]
         public async Task ExtractsBooksOnShortList()
         {
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(TestDataHelper.ShortList);
 
-            ListPage page = new ListPage(TestDataHelper.ShortListUrl, doc);
+            var pageClientMock = new Mock<IPageClient>();
+            pageClientMock.Setup(s => s.LoadAsync(TestDataHelper.ShortListUrl)).ReturnsAsync(doc);
+
+            ListPage page = new ListPage(TestDataHelper.ShortListUrl, pageClientMock.Object, Utilities.GetThrottle());
 
             var result = await page.Extract();
 
@@ -28,8 +45,10 @@ namespace BookBarn.Crawler.GoodReads.Test
         {
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(TestDataHelper.FirstPageInList);
+            var pageClientMock = new Mock<IPageClient>();
+            pageClientMock.Setup(s => s.LoadAsync(TestDataHelper.FirstPageInListUrl)).ReturnsAsync(doc);
 
-            ListPage page = new ListPage(TestDataHelper.FirstPageInListUrl, doc);
+            ListPage page = new ListPage(TestDataHelper.FirstPageInListUrl, pageClientMock.Object, Utilities.GetThrottle());
 
             var result = await page.Extract();
 
@@ -47,7 +66,10 @@ namespace BookBarn.Crawler.GoodReads.Test
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(TestDataHelper.LastPageInList);
 
-            ListPage page = new ListPage(TestDataHelper.LastPageInListUrl, doc);
+            var pageClientMock = new Mock<IPageClient>();
+            pageClientMock.Setup(s => s.LoadAsync(TestDataHelper.LastPageInListUrl)).ReturnsAsync(doc);
+
+            ListPage page = new ListPage(TestDataHelper.LastPageInListUrl, pageClientMock.Object, Utilities.GetThrottle());
 
             var result = await page.Extract();
 

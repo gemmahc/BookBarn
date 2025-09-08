@@ -1,6 +1,6 @@
 ﻿namespace BookBarn.Crawler.Test
 {
-    internal class TestCrawlerQueue : ICrawlerQueue
+    public class TestCrawlerQueue : ICrawlerQueue
     {
         Queue<CrawlRequest> _queue = new Queue<CrawlRequest>();
 

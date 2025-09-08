@@ -1,16 +1,33 @@
 using BookBarn.Model;
 using HtmlAgilityPack;
+using Moq;
 
 namespace BookBarn.Crawler.GoodReads.Test
 {
     public class BookPageTest
     {
         [Fact]
+        public void BookPageCtorTest()
+        {
+            BookPage page = new BookPage(TestDataHelper.StandaloneBookUri, new Mock<IPageClient>().Object, Utilities.GetThrottle());
+
+            Assert.Equal(TestDataHelper.StandaloneBookUri, page.Endpoint);
+            Assert.False(page.Initialized);
+
+            Assert.Throws<ArgumentNullException>(() => new SeriesPage(null, new Mock<IPageClient>().Object, Utilities.GetThrottle()));
+            Assert.Throws<ArgumentNullException>(() => new SeriesPage(TestDataHelper.StandaloneBookUri, null, Utilities.GetThrottle()));
+            Assert.Throws<ArgumentNullException>(() => new SeriesPage(TestDataHelper.StandaloneBookUri, new Mock<IPageClient>().Object, null));
+        }
+
+        [Fact]
         public async Task ExtractsBookInSeries()
         {
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(TestDataHelper.BookInSeries);
-            BookPage page = new BookPage(TestDataHelper.BookInSeriesUrl, doc);
+            var pageClientMock = new Mock<IPageClient>();
+            pageClientMock.Setup(s => s.LoadAsync(TestDataHelper.BookInSeriesUrl)).ReturnsAsync(doc);
+
+            BookPage page = new BookPage(TestDataHelper.BookInSeriesUrl, pageClientMock.Object, Utilities.GetThrottle());
 
             Book res = await page.Extract();
 
@@ -46,7 +63,10 @@ namespace BookBarn.Crawler.GoodReads.Test
         {
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(TestDataHelper.StandaloneBook);
-            BookPage page = new BookPage(TestDataHelper.StandaloneBookUri, doc);
+            var pageClientMock = new Mock<IPageClient>();
+            pageClientMock.Setup(s => s.LoadAsync(TestDataHelper.StandaloneBookUri)).ReturnsAsync(doc);
+
+            BookPage page = new BookPage(TestDataHelper.StandaloneBookUri, pageClientMock.Object, Utilities.GetThrottle());
 
             Book res = await page.Extract();
 
@@ -88,7 +108,10 @@ namespace BookBarn.Crawler.GoodReads.Test
             var jsonData = doc.DocumentNode.SelectSingleNode(xpath);
             jsonData.Remove();
 
-            BookPage page = new BookPage(TestDataHelper.StandaloneBookUri, doc);
+            var pageClientMock = new Mock<IPageClient>();
+            pageClientMock.Setup(s => s.LoadAsync(TestDataHelper.StandaloneBookUri)).ReturnsAsync(doc);
+
+            BookPage page = new BookPage(TestDataHelper.StandaloneBookUri, pageClientMock.Object, Utilities.GetThrottle());
 
             await Assert.ThrowsAsync<PageParseException>(async () => await page.Extract());
         }
@@ -102,7 +125,10 @@ namespace BookBarn.Crawler.GoodReads.Test
             var jsonData = doc.DocumentNode.SelectSingleNode(xpath);
             jsonData.InnerHtml = "{\"props\":{\"pageProps\":{\"apolloState\":[]}}}";
 
-            BookPage page = new BookPage(TestDataHelper.StandaloneBookUri, doc);
+            var pageClientMock = new Mock<IPageClient>();
+            pageClientMock.Setup(s => s.LoadAsync(TestDataHelper.StandaloneBookUri)).ReturnsAsync(doc);
+
+            BookPage page = new BookPage(TestDataHelper.StandaloneBookUri, pageClientMock.Object, Utilities.GetThrottle());
 
             await Assert.ThrowsAsync<PageParseException>(async () => await page.Extract());
         }
@@ -116,7 +142,10 @@ namespace BookBarn.Crawler.GoodReads.Test
             var jsonData = doc.DocumentNode.SelectSingleNode(xpath);
             jsonData.InnerHtml = "{}";
 
-            BookPage page = new BookPage(TestDataHelper.StandaloneBookUri, doc);
+            var pageClientMock = new Mock<IPageClient>();
+            pageClientMock.Setup(s => s.LoadAsync(TestDataHelper.StandaloneBookUri)).ReturnsAsync(doc);
+
+            BookPage page = new BookPage(TestDataHelper.StandaloneBookUri, pageClientMock.Object, Utilities.GetThrottle());
 
             await Assert.ThrowsAsync<PageParseException>(async () => await page.Extract());
         }

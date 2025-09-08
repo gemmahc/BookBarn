@@ -7,10 +7,7 @@ namespace BookBarn.Crawler.GoodReads
 {
     public class ListPage : Page<BookList>
     {
-        public ListPage(Uri endpoint, IRequestThrottle throttle) : base(endpoint, throttle)
-        { }
-
-        public ListPage(Uri endpoint, HtmlDocument document) : base(endpoint, document)
+        public ListPage(Uri endpoint, IPageClient client, IRequestThrottle throttle) : base(endpoint, client, throttle)
         { }
 
         protected override Task<BookList> ExtractCore(HtmlDocument doc)

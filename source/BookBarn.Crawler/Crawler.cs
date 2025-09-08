@@ -42,8 +42,7 @@
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
-                return new CrawlerResult(Endpoint, Result.Failure, this.GetType());
+                return new CrawlerResult(Endpoint, Result.Failure, this.GetType()) { Error = ex };
             }
         }
 

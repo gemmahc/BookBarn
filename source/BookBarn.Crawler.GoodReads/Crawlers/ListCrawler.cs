@@ -7,20 +7,26 @@ namespace BookBarn.Crawler.GoodReads
     public class ListCrawler : Crawler
     {
         IRequestThrottle _throttle;
+        IPageClient _pageClient;
 
-        public ListCrawler(Uri entrypoint, IRequestThrottle throttle) : base(entrypoint)
+        public ListCrawler(Uri entrypoint, IRequestThrottle throttle, IPageClient pageClient) : base(entrypoint)
         {
+            ArgumentNullException.ThrowIfNull(entrypoint);
+            ArgumentNullException.ThrowIfNull(throttle);
+            ArgumentNullException.ThrowIfNull(pageClient);
+
             _throttle = throttle;
+            _pageClient = pageClient;
         }
 
         protected override async Task RunCrawlerAsync()
         {
-            ListPage page = new ListPage(Endpoint, _throttle);
+            ListPage page = new ListPage(Endpoint, _pageClient, _throttle);
 
             BookList list = await page.Extract();
 
             // If list is paginated, dispatch crawler for the next page of the list.
-            if(list.NextPage != null)
+            if (list.NextPage != null)
             {
                 DispatchChild<ListCrawler>(list.NextPage);
             }

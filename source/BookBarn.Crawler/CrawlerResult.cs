@@ -35,5 +35,10 @@
         /// Crawlers requested by the execution of this crawler.
         /// </summary>
         public IDictionary<Uri, Type> ToDispatch { get; private set; }
+
+        /// <summary>
+        /// In the case of failure, the exception details. 
+        /// </summary>
+        public Exception? Error { get; set; }
     }
 }

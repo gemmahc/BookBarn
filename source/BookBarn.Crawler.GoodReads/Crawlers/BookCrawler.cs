@@ -11,19 +11,28 @@ namespace BookBarn.Crawler.GoodReads
         private IBooksService _bookService;
         private IRequestThrottle _throttle;
         private IHttpClientFactory _httpClientFactory;
+        private IPageClient _pageClient;
 
-        public BookCrawler(Uri bookPage, IMediaService mediaService, IBooksService bookService, IRequestThrottle throttle, IHttpClientFactory httpClientFactory) : base(bookPage)
+        public BookCrawler(Uri bookPage, IMediaService mediaService, IBooksService bookService, IRequestThrottle throttle, IHttpClientFactory httpClientFactory, IPageClient pageClient) : base(bookPage)
         {
+            ArgumentNullException.ThrowIfNull(bookPage);
+            ArgumentNullException.ThrowIfNull(mediaService);
+            ArgumentNullException.ThrowIfNull(bookService);
+            ArgumentNullException.ThrowIfNull(throttle);
+            ArgumentNullException.ThrowIfNull(httpClientFactory);
+            ArgumentNullException.ThrowIfNull(pageClient);
+
             _mediaService = mediaService;
             _bookService = bookService;
             _throttle = throttle;
             _httpClientFactory = httpClientFactory;
+            _pageClient = pageClient;
         }
 
         protected override async Task RunCrawlerAsync()
         {
             //Console.WriteLine($"Crawling: [{Endpoint}]");
-            var page = new BookPage(Endpoint, _throttle);
+            var page = new BookPage(Endpoint, _pageClient, _throttle);
 
             // Get the page and extract content into object.
             var book = await page.Extract();
@@ -35,7 +44,7 @@ namespace BookBarn.Crawler.GoodReads
             {
                 Media cover = await UploadMedia(bookId, new Uri(book.CoverImage));
 
-                if(cover != null)
+                if (cover != null)
                 {
                     book.CoverImage = cover.Location;
                     book.CoverMedia = cover;

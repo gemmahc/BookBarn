@@ -5,20 +5,19 @@ namespace BookBarn.Crawler
 {
     public abstract class Page<T>
     {
-        protected IRequestThrottle? _throttle;
+        protected IRequestThrottle _throttle;
         private HtmlDocument? _document;
+        IPageClient _client;
 
-        protected Page(Uri endpoint, IRequestThrottle throttle)
+        protected Page(Uri endpoint, IPageClient client, IRequestThrottle throttle)
         {
+            ArgumentNullException.ThrowIfNull(endpoint);
+            ArgumentNullException.ThrowIfNull(throttle);
+            ArgumentNullException.ThrowIfNull(client);
+
             Endpoint = endpoint;
+            _client = client;
             _throttle = throttle;
-        }
-
-        public Page(Uri endpoint, HtmlDocument document)
-        {
-            _document = document;
-            Initialized = true;
-            Endpoint = endpoint;
         }
 
         public async Task<T> Extract()
@@ -53,14 +52,11 @@ namespace BookBarn.Crawler
         protected abstract Task<T> ExtractCore(HtmlDocument doc);
 
 
-        protected async Task Init(IRequestThrottle? throttle)
+        protected async Task Init(IRequestThrottle throttle)
         {
-            ArgumentNullException.ThrowIfNull(throttle);
-
             _document = await throttle.RunAsync(Endpoint, async (target) =>
             {
-                var web = new HtmlWeb();
-                return await web.LoadFromWebAsync(target.ToString());
+                return await _client.LoadAsync(target);
             });
 
             Initialized = true;

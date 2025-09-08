@@ -15,17 +15,8 @@ namespace BookBarn.Crawler.GoodReads
         /// </summary>
         /// <param name="endpoint">The endpoint.</param>
         /// <param name="throttle">The request throttle used when accessing the endpoint.</param>
-        public BookPage(Uri endpoint, IRequestThrottle throttle) : base(endpoint, throttle)
+        public BookPage(Uri endpoint, IPageClient client, IRequestThrottle throttle) : base(endpoint, client, throttle)
         { }
-
-        /// <summary>
-        /// Creates a new BookPage for the specified endpoint, prepopulated with the provided html doc.
-        /// </summary>
-        /// <param name="endpoint">The endpoint.</param>
-        /// <param name="document">The page html.</param>
-        public BookPage(Uri endpoint, HtmlDocument document) : base(endpoint, document)
-        {
-        }
 
         /// <summary>
         /// Extraction logic for HTML into Book

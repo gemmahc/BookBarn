@@ -44,12 +44,13 @@ builder.Services.AddHttpClient<IMediaService, MediaClient>(client =>
     client.BaseAddress = new Uri(bookBarnApi);
 });
 
+builder.Services.AddSingleton<IPageClient, HtmlPageClient>();
 builder.Services.AddSingleton<IRequestThrottle, PartitionedRequestThrottle>();
 builder.Services.AddSingleton<ICrawlerFactory, GoodReadsCrawlerFactory>();
 builder.Services.AddSingleton<ICrawlerQueue, InMemoryQueue>();
 
+// Add web api 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
