@@ -88,7 +88,6 @@ namespace BookBarn.Crawler.Test
         [Fact]
         public async Task PageInitFailsOnNullDocument()
         {
-            string exMsg = "Test exception";
             Uri sample = new Uri("https://example.com");
             var pageClientMock = new Mock<IPageClient>();
 #pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.

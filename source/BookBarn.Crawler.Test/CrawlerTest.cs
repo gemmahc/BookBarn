@@ -14,6 +14,7 @@ namespace BookBarn.Crawler.Test
             Assert.Equal(Result.Success, result.Result);
             Assert.Equal(typeof(TestCrawlerA), result.CrawlerType);
             Assert.Equal(endpoint, result.Endpoint);
+            Assert.Null(result.Error);
         }
 
         [Fact]
@@ -32,6 +33,7 @@ namespace BookBarn.Crawler.Test
             Assert.Equal(Result.Failure, result.Result);
             Assert.Equal(typeof(TestCrawlerA), result.CrawlerType);
             Assert.Equal(endpoint, result.Endpoint);
+            Assert.NotNull(result.Error);
         }
 
         [Fact]

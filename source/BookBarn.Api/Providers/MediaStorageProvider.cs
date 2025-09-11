@@ -1,5 +1,7 @@
-﻿using Azure.Storage.Blobs;
+﻿using Azure.Core;
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs.Specialized;
 using Azure.Storage.Sas;
 using BookBarn.Api.ErrorHandling;
 using BookBarn.Model;
@@ -11,12 +13,23 @@ namespace BookBarn.Api.Providers
     public class MediaStorageProvider : IMediaStorageProvider
     {
         private BlobContainerClient _containerClient;
+        private UserDelegationKey? _userDelegationKey;
+        private string _accountName;
 
         public MediaStorageProvider(string connectionString, string containerName)
         {
             _containerClient = new BlobContainerClient(connectionString, containerName);
             _containerClient.CreateIfNotExists(PublicAccessType.None);
+            _accountName = _containerClient.GetParentBlobServiceClient().AccountName;
         }
+
+        public MediaStorageProvider(Uri blobContainerUri, TokenCredential credential)
+        {
+            _containerClient = new BlobContainerClient(blobContainerUri, credential);
+            _containerClient.CreateIfNotExists(PublicAccessType.None);
+            _accountName = _containerClient.GetParentBlobServiceClient().AccountName;
+        }
+
         public async Task<Media> UpsertFrom(string id, Uri source)
         {
             Dictionary<string, string> metadata = new Dictionary<string, string>()
@@ -52,27 +65,48 @@ namespace BookBarn.Api.Providers
             throw new DataException(DataError.MediaUploadFailed, $"Blob upload returned with incomplete status [{blobCopyInfo.Value.CopyStatus}]");
         }
 
-        public Task<MediaStorageToken> CreateWriteToken(string id, TimeSpan duration)
+        public async Task<MediaStorageToken> CreateWriteToken(string id, TimeSpan duration)
         {
-            BlobSasBuilder builder = new BlobSasBuilder(
-                    BlobSasPermissions.Read | BlobSasPermissions.Write | BlobSasPermissions.Add | BlobSasPermissions.Create,
-                    new DateTimeOffset(DateTime.UtcNow.Add(duration), TimeSpan.Zero));
+            if (_userDelegationKey == null || _userDelegationKey.SignedExpiresOn < DateTimeOffset.UtcNow.AddMinutes(5))
+            {
+                // Create a new deligation key valid from 1 minute ago for 1 day.
+                _userDelegationKey = await _containerClient
+                                                .GetParentBlobServiceClient()
+                                                .GetUserDelegationKeyAsync(
+                                                    DateTimeOffset.UtcNow.AddMinutes(-1), 
+                                                    DateTimeOffset.UtcNow.AddDays(1));
+            }
 
-            var blobClient = _containerClient.GetBlobClient(id);
-            Uri sas = blobClient.GenerateSasUri(builder);
+            BlobClient blobClient = _containerClient.GetBlobClient(id);
+
+            BlobSasBuilder builder = new BlobSasBuilder()
+            {
+                BlobContainerName = blobClient.BlobContainerName,
+                BlobName = blobClient.Name,
+                Resource = "b",
+                StartsOn = DateTimeOffset.UtcNow.AddMinutes(-1),
+                ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(5)
+            };
+
+            builder.SetPermissions(BlobSasPermissions.Read | BlobSasPermissions.Write | BlobSasPermissions.Add | BlobSasPermissions.Create);
+
+            BlobUriBuilder uriBuilder = new BlobUriBuilder(blobClient.Uri)
+            {
+                Sas = builder.ToSasQueryParameters(_userDelegationKey, _accountName)
+            };
 
             MediaStorageToken token = new MediaStorageToken()
             {
                 Id = id,
-                StorageEndpoint = sas,
+                StorageEndpoint = uriBuilder.ToUri(),
                 Headers = new Dictionary<string, string> {
                     { "x-ms-date", DateTime.UtcNow.ToString("R", CultureInfo.InvariantCulture) },
                     { "x-ms-version", "2025-07-05" },
                     { "x-ms-blob-type", "BlockBlob" }
                 }
             };
-               
-            return Task.FromResult(token);
+
+            return token;
         }
 
         public async Task Delete(string id)

@@ -168,6 +168,7 @@ namespace BookBarn.Crawler
                 result.Endpoint,
                 result.Result
                 );
+
             Info.CurrentlyRunning.Remove(result.Endpoint);
             Info.CompletedLastCycle++;
 
@@ -184,7 +185,7 @@ namespace BookBarn.Crawler
                     });
 
                 // Queue any of the child crawlers that were dispatched by this crawler.
-                
+
                 foreach (var kvp in result.ToDispatch)
                 {
                     CrawlRequest request = new CrawlRequest(kvp.Key, kvp.Value);
@@ -194,6 +195,11 @@ namespace BookBarn.Crawler
             }
             else if (result.Result == Result.Failure)
             {
+                if (result.Error != null)
+                {
+                    _logger.LogWarning(result.Error, "Crawler for [{endpoint}] failed with: {error}", result.Endpoint, result.Error.Message);
+                }
+
                 Info.FailedLastCycle.Add(result.Endpoint);
                 Visit visit = _visits.AddOrUpdate(
                                             result.Endpoint,

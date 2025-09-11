@@ -5,6 +5,7 @@ using BookBarn.Model.Providers;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+Configuration config = new Configuration(builder.Configuration);
 
 // Add logging.
 if (builder.Environment.IsDevelopment())
@@ -17,31 +18,30 @@ else
     // production logger impl (seilog/appinsight, don't know yet)
 }
 
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddAzureKeyVault(
+        new Uri($"https://{config.KeyVaultName}.vault.azure.net/"),
+        config.ServiceCredential,
+        new KeyVaultSecretProvider(builder.Environment.EnvironmentName.ToLowerInvariant()));
+}
+
 // Add data providers to container
-string? dataSourceConn = builder.Configuration.GetConnectionString("DataSource");
-string? database = builder.Configuration["DataSource:Database"];
-string? bookCollection = builder.Configuration["DataSource:BookCollection"];
-string? genreCollection = builder.Configuration["DataSource:GenreCollection"];
-string? mediaStorage = builder.Configuration.GetConnectionString("MediaSource");
-string? mediaSourceContainer = builder.Configuration["MediaSource:Container"];
+builder.Services.AddSingleton<IBookDataProvider>(dp => new BookDataProvider(config.DataSourceConnectionString, config.DataSourceDatabase, config.DataSourceBookCollection));
+builder.Services.AddSingleton<IGenreDataProvider>(dp => new GenreDataProvider(config.DataSourceConnectionString, config.DataSourceDatabase, config.DataSourceGenreCollection));
 
-if (string.IsNullOrEmpty(database) || string.IsNullOrEmpty(bookCollection) || string.IsNullOrEmpty(genreCollection) || string.IsNullOrEmpty(dataSourceConn))
+if (builder.Environment.IsDevelopment())
 {
-    throw new InvalidOperationException("Unable to start without valid datasource configuration.");
+    // Use emulator storage - no auth.
+    builder.Services.AddSingleton<IMediaStorageProvider>(ms => new MediaStorageProvider(config.MediaStoreConnectionString, config.MediaStoreContainer));
 }
-
-builder.Services.AddSingleton<IBookDataProvider>(dp => new BookDataProvider(dataSourceConn, database, bookCollection));
-builder.Services.AddSingleton<IGenreDataProvider>(dp => new GenreDataProvider(dataSourceConn, database, genreCollection));
-
-if (string.IsNullOrEmpty(mediaStorage) || string.IsNullOrEmpty(mediaSourceContainer))
+else
 {
-    throw new InvalidOperationException("Unable to start without valid media storage configuration.");
+    // Use storage account with service credential.
+    builder.Services.AddSingleton<IMediaStorageProvider>(ms => new MediaStorageProvider(new Uri(config.MediaStoreConnectionString), config.ServiceCredential));
 }
-
-builder.Services.AddSingleton<IMediaStorageProvider>(ms => new MediaStorageProvider(mediaStorage, mediaSourceContainer));
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
